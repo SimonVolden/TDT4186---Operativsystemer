@@ -27,6 +27,7 @@ int main(void)
 #include <unistd.h>
 
 #define MAX_LIMIT 20
+#define NUMBER_ALARMS 100
 
 int clear(void)
 {
@@ -37,8 +38,8 @@ int clear(void)
 
 int append_word(const char **words, size_t size, const char *word)
 {
-    size_t i = 0;
-    while (i < size && words[i])
+    int i = 0;
+    while (i < size && words[i] != NULL)
     {
         ++i;
     }
@@ -114,7 +115,8 @@ int check_format_time(time_t *result, const char *T)
 int main(void)
 {
     // const char T[] = "2022-02-04 15:00:15";
-    const char *alarms[100] = {};
+    // const char *alarms[100] = {};
+
     char T[MAX_LIMIT];
     struct tm *timeinfo;
     time_t result = 0;
@@ -122,12 +124,13 @@ int main(void)
     time_t now;
     int diff_t;
     now = time(NULL);
-
-    /*struct alarm
+    struct Alarm
     {
         time_t time;
         int pid;
-    };*/
+        char timestring[MAX_LIMIT];
+    };
+    struct Alarm alarms[NUMBER_ALARMS] = {0};
 
     char buffer[80];
     timeinfo = localtime(&now);
@@ -180,65 +183,45 @@ int main(void)
             else
             {
                 printf("Difference: %d\n", diff_t);
-                append_word(alarms, 100, T);
 
-                if (fork() == 0)
+                int pid = fork();
+
+                if (pid == 0)
                 {
-                    // child sett alarm
-                    number_of_alarms = 0;
-                    while (number_of_alarms < 100 && alarms[number_of_alarms])
-                    {
-                        printf("%s \n", alarms[number_of_alarms]);
-                        ++number_of_alarms;
-                    }
+
                     sleep(diff_t);
                     printf("alarm! \n");
+                    // clear();
                     exit(3);
                 }
-
-                printf("ok");
-                break;
-                /* while ((getchar()) != '\n')
-                    ;
-                */
-                /* char id[12];
-                printf("%d\n", pid);
-                sprintf(id, "%d", pid);
-
-                strcat(T, id); */
-
-                /* if (pid != 0)
+                else
                 {
-                } */
-
-                /* number_of_alarms++;
-                printf("%s \n", alarms[number_of_alarms - 1]); */
-
-                /* size_t n = sizeof(alarms) / sizeof(alarms[0]);
-        printf("%lu", n);
-        return EXIT_SUCCESS; */
+                    struct Alarm alarm;
+                    alarm.pid = pid;
+                    alarm.time = result;
+                    strcpy(alarm.timestring, T);
+                    alarms[number_of_alarms] = alarm;
+                    number_of_alarms++;
+                }
+                clear();
+                break;
             }
-            break;
-
             clear();
             break;
 
         case (108):
             printf("Answer was l \n");
 
-            number_of_alarms = 0;
-            while (number_of_alarms < 100 && alarms[number_of_alarms])
+            for (int i = 0; i < NUMBER_ALARMS; i++)
             {
-                printf("%s \n", alarms[number_of_alarms]);
-                ++number_of_alarms;
+                if (alarms[i].time > time(NULL))
+                {
+                    printf("Alarm %d at: %s \n", alarms[i].pid, alarms[i].timestring);
+                }
             }
-            if (number_of_alarms == 0)
-            {
-                printf("%s \n", alarms[0]);
-            }
-
             clear();
             break;
+
         case (99):
             printf("Answer was c \n");
 
