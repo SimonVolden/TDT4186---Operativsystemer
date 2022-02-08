@@ -36,24 +36,6 @@ int clear(void)
     return 0;
 }
 
-int append_word(const char **words, size_t size, const char *word)
-{
-    int i = 0;
-    while (i < size && words[i] != NULL)
-    {
-        ++i;
-    }
-    if (i < size)
-    {
-        words[i] = word;
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
-}
-
 int check_format_time(time_t *result, const char *T)
 {
     int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
@@ -114,9 +96,6 @@ int check_format_time(time_t *result, const char *T)
 
 int main(void)
 {
-    // const char T[] = "2022-02-04 15:00:15";
-    // const char *alarms[100] = {};
-
     char T[MAX_LIMIT];
     struct tm *timeinfo;
     time_t result = 0;
