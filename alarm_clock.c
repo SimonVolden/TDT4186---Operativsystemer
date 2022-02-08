@@ -14,11 +14,18 @@ int main(void)
 
     return 0;
 }
+
  */
 
+#include "alarm_clock.h"
+#include "utilities.h"
 #include <time.h>
+#include <string.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <unistd.h>
+
 #define MAX_LIMIT 20
 
 int clear(void)
@@ -46,6 +53,64 @@ int append_word(const char **words, size_t size, const char *word)
     }
 }
 
+int check_format_time(time_t *result, const char *T)
+{
+    int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
+
+    if (sscanf(T, "%4d-%2d-%2d %2d:%2d:%2d", &year, &month, &day, &hour, &min, &sec) == 6)
+    {
+        struct tm breakdown = {0};
+        breakdown.tm_year = year - 1900; /* years since 1900 */
+        if (month > 12 || month < 0)
+        {
+            fprintf(stderr, "Could not convert time input to time_t\n");
+            return 1;
+        }
+        breakdown.tm_mon = month - 1;
+
+        if (check_month_and_day(month, day))
+        {
+            fprintf(stderr, "Could not convert time input to time_t\n");
+            return 1;
+        }
+
+        breakdown.tm_mday = day;
+        if (hour > 24 || hour < 0)
+        {
+
+            fprintf(stderr, "Could not convert time input to time_t\n");
+            return 1;
+        }
+        breakdown.tm_hour = hour;
+        if (min > 59 || min < 0)
+        {
+            fprintf(stderr, "Could not convert time input to time_t\n");
+            return 1;
+        }
+        breakdown.tm_min = min;
+        if (sec > 59 || sec < 0)
+        {
+            fprintf(stderr, "Could not convert time input to time_t\n");
+            return 1;
+        }
+        breakdown.tm_sec = sec;
+
+        if ((*result = mktime(&breakdown)) == (time_t)-1)
+        {
+            fprintf(stderr, "Could not convert time input to time_t\n");
+            return 1;
+        }
+        puts(ctime(result));
+        return 0;
+    }
+    else
+    {
+        fprintf(stderr, "The input was not a valid time format\n");
+        clear();
+        return 1;
+    }
+}
+
 int main(void)
 {
     // const char T[] = "2022-02-04 15:00:15";
@@ -53,9 +118,16 @@ int main(void)
     char T[MAX_LIMIT];
     struct tm *timeinfo;
     time_t result = 0;
+    time_t *result_p = &result;
     time_t now;
-    double diff_t;
+    int diff_t;
     now = time(NULL);
+
+    /*struct alarm
+    {
+        time_t time;
+        int pid;
+    };*/
 
     char buffer[80];
     timeinfo = localtime(&now);
@@ -70,13 +142,15 @@ int main(void)
 
     while (x)
     {
+
         printf("Please enter 's' (schedule), 'l' (list), 'c' (cancel), 'x' (exit) \n");
         // scanf("%c", &answer);
+
         ch = getchar();
 
         switch (ch)
         {
-        case (115):
+        case (115): // schedule alarm
 
             printf("Answer was s \n");
 
@@ -89,113 +163,78 @@ int main(void)
 
             now = time(NULL);
 
-            int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
-
-            if (sscanf(T, "%4d-%2d-%2d %2d:%2d:%2d", &year, &month, &day, &hour, &min, &sec) == 6)
+            if (check_format_time(result_p, T))
             {
-                struct tm breakdown = {0};
-                breakdown.tm_year = year - 1900; /* years since 1900 */
-                if (month > 12 || month < 0)
-                {
-                    fprintf(stderr, "Could not convert time input to time_t\n");
-                    break;
-                }
-                breakdown.tm_mon = month - 1;
-
-                if (month == 2)
-                {
-                    if (day > 29)
-                    {
-                        fprintf(stderr, "Could not convert time input to time_t\n");
-                        break;
-                    }
-                }
-                else if (month == (1 || 3 || 7 || 8 || 10 || 12))
-                {
-                    if (day > 31)
-                    {
-                        fprintf(stderr, "Could not convert time input to time_t\n");
-                        break;
-                    }
-                }
-                else
-                {
-                    if (day > 30)
-                    {
-                        fprintf(stderr, "Could not convert time input to time_t\n");
-                        break;
-                    }
-                }
-
-                breakdown.tm_mday = day;
-                if (hour > 24 || hour < 0)
-                {
-
-                    fprintf(stderr, "Could not convert time input to time_t\n");
-                    break;
-                }
-                breakdown.tm_hour = hour;
-                if (min > 59 || min < 0)
-                {
-                    fprintf(stderr, "Could not convert time input to time_t\n");
-                    break;
-                }
-                breakdown.tm_min = min;
-                if (sec > 59 || sec < 0)
-                {
-                    fprintf(stderr, "Could not convert time input to time_t\n");
-                    break;
-                }
-                breakdown.tm_sec = sec;
-
-                if ((result = mktime(&breakdown)) == (time_t)-1)
-                {
-                    fprintf(stderr, "Could not convert time input to time_t\n");
-                    break;
-                }
-                puts(ctime(&result));
-
-                diff_t = difftime(result, now);
-
-                if (diff_t < 0)
-                {
-                    printf("Difference: %f is negative\n", diff_t);
-                    fprintf(stderr, "The input was not a valid time format\n");
-                    break;
-                }
-                else
-                {
-                    printf("Difference: %f\n", diff_t);
-                    append_word(alarms, 100, T);
-                    /* number_of_alarms++;
-                    printf("%s \n", alarms[number_of_alarms - 1]); */
-
-                    clear();
-                    break;
-                    /* size_t n = sizeof(alarms) / sizeof(alarms[0]);
-                    printf("%lu", n);
-                    return EXIT_SUCCESS; */
-                }
+                break;
             }
 
-            else
+            diff_t = (int)difftime(result, now);
+
+            if (diff_t < 0)
             {
+                printf("Difference: %d is negative\n", diff_t);
                 fprintf(stderr, "The input was not a valid time format\n");
                 clear();
                 break;
             }
-            clear();
+            else
+            {
+                printf("Difference: %d\n", diff_t);
+                append_word(alarms, 100, T);
 
+                if (fork() == 0)
+                {
+                    // child sett alarm
+                    number_of_alarms = 0;
+                    while (number_of_alarms < 100 && alarms[number_of_alarms])
+                    {
+                        printf("%s \n", alarms[number_of_alarms]);
+                        ++number_of_alarms;
+                    }
+                    sleep(diff_t);
+                    printf("alarm! \n");
+                    exit(3);
+                }
+
+                printf("ok");
+                break;
+                /* while ((getchar()) != '\n')
+                    ;
+                */
+                /* char id[12];
+                printf("%d\n", pid);
+                sprintf(id, "%d", pid);
+
+                strcat(T, id); */
+
+                /* if (pid != 0)
+                {
+                } */
+
+                /* number_of_alarms++;
+                printf("%s \n", alarms[number_of_alarms - 1]); */
+
+                /* size_t n = sizeof(alarms) / sizeof(alarms[0]);
+        printf("%lu", n);
+        return EXIT_SUCCESS; */
+            }
+            break;
+
+            clear();
             break;
 
         case (108):
-            // printf("Answer was l \n");
+            printf("Answer was l \n");
 
             number_of_alarms = 0;
             while (number_of_alarms < 100 && alarms[number_of_alarms])
             {
                 printf("%s \n", alarms[number_of_alarms]);
                 ++number_of_alarms;
+            }
+            if (number_of_alarms == 0)
+            {
+                printf("%s \n", alarms[0]);
             }
 
             clear();
@@ -215,6 +254,7 @@ int main(void)
 
             clear();
             printf("Error!");
+            break;
         }
-    }
+    } // while
 }
