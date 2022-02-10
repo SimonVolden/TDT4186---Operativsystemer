@@ -1,98 +1,4 @@
-/* localtime example */
-/* #include <stdio.h>
-#include <time.h>
-
-int main(void)
-{
-    time_t now, alarm_time;
-    struct tm *timeinfo;
-
-    alarm_time = time(&now) + 3600;
-    timeinfo = localtime(&alarm_time);
-    printf("%ld\n", time(&now));
-    printf("Current local time and date: %s", asctime(timeinfo));
-
-    return 0;
-}
-
- */
-
 #include "alarm_clock.h"
-#include "utilities.h"
-#include <time.h>
-#include <string.h>
-#include <stdio.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#define MAX_LIMIT 20
-#define NUMBER_ALARMS 100
-
-int clear(void)
-{
-    while ((getchar()) != '\n')
-        ;
-    return 0;
-}
-
-int check_format_time(time_t *result, const char *T)
-{
-    int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
-
-    if (sscanf(T, "%4d-%2d-%2d %2d:%2d:%2d", &year, &month, &day, &hour, &min, &sec) == 6)
-    {
-        struct tm breakdown = {0};
-        breakdown.tm_year = year - 1900; /* years since 1900 */
-        if (month > 12 || month < 0)
-        {
-            fprintf(stderr, "Could not convert time input to time_t\n");
-            return 1;
-        }
-        breakdown.tm_mon = month - 1;
-
-        if (check_month_and_day(month, day))
-        {
-            fprintf(stderr, "Could not convert time input to time_t\n");
-            return 1;
-        }
-
-        breakdown.tm_mday = day;
-        if (hour > 24 || hour < 0)
-        {
-
-            fprintf(stderr, "Could not convert time input to time_t\n");
-            return 1;
-        }
-        breakdown.tm_hour = hour;
-        if (min > 59 || min < 0)
-        {
-            fprintf(stderr, "Could not convert time input to time_t\n");
-            return 1;
-        }
-        breakdown.tm_min = min;
-        if (sec > 59 || sec < 0)
-        {
-            fprintf(stderr, "Could not convert time input to time_t\n");
-            return 1;
-        }
-        breakdown.tm_sec = sec;
-
-        if ((*result = mktime(&breakdown)) == (time_t)-1)
-        {
-            fprintf(stderr, "Could not convert time input to time_t\n");
-            return 1;
-        }
-        puts(ctime(result));
-        return 0;
-    }
-    else
-    {
-        fprintf(stderr, "The input was not a valid time format\n");
-        clear();
-        return 1;
-    }
-}
 
 int main(void)
 {
@@ -133,10 +39,9 @@ int main(void)
         switch (ch)
         {
         case (115): // schedule alarm
+            clear();
 
             printf("Answer was s \n");
-
-            clear();
             printf("Schedule alarm at which date and time? ");
 
             // scanf("%19s", T);
@@ -147,6 +52,7 @@ int main(void)
 
             if (check_format_time(result_p, T))
             {
+                fprintf(stderr, "Could not convert time input to time_t\n");
                 break;
             }
 
@@ -156,7 +62,6 @@ int main(void)
             {
                 printf("Difference: %d is negative\n", diff_t);
                 fprintf(stderr, "The input was not a valid time format\n");
-                clear();
                 break;
             }
             else
@@ -167,7 +72,6 @@ int main(void)
 
                 if (pid == 0)
                 {
-
                     sleep(diff_t);
                     printf("alarm! \n");
                     // clear();
@@ -182,14 +86,12 @@ int main(void)
                     alarms[number_of_alarms] = alarm;
                     number_of_alarms++;
                 }
-                clear();
                 break;
             }
-            clear();
             break;
 
         case (108):
-            printf("Answer was l \n");
+            printf("Answer was l \n"); // list alarms
 
             for (int i = 0; i < NUMBER_ALARMS; i++)
             {
@@ -198,25 +100,19 @@ int main(void)
                     printf("Alarm %d at: %s \n", alarms[i].pid, alarms[i].timestring);
                 }
             }
-            clear();
             break;
 
-        case (99):
+        case (99): // cancel
             printf("Answer was c \n");
-
-            clear();
             break;
-        case (120):
+        case (120): // exit
             printf("Exiting... \n");
-
-            clear();
             x = 0;
             break;
-        default:
-
-            clear();
-            printf("Error!");
+        default: // error, incorrect input
+            printf("Error! \n");
             break;
-        }
-    } // while
-}
+        } // switch
+        clear();
+    } // while loop
+} // main

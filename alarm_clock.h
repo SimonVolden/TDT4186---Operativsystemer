@@ -1,8 +1,13 @@
-#include <stddef.h>
-#include <time.h>
+#pragma once
 #include "utilities.h"
+#include <time.h>
+#include <string.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-int append_word(const char **words, size_t size, const char *word);
-int check_format_time(time_t *result, const char *T);
+#define MAX_LIMIT 20
+#define NUMBER_ALARMS 100
 
 int main(void);
