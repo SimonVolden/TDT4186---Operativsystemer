@@ -90,13 +90,14 @@ int main(void)
                     sleep(diff_t);
                     printf("alarm! \n");
                     // does not work on WSL, works on linux with mpg123 installed
-                    /* for (int i = 0; i < NUMBER_ALARMS; i++)
+                    for (int i = 0; i < NUMBER_ALARMS; i++)
                     {
                         if (alarms[i].pid = getpid())
                         {
-                            execlp("mpg123", "-q", alarms[i].mp3_path, NULL);
+                            // execlp("mpg123", "-q", alarms[i].mp3_path, NULL);
+                            printf(alarms[i].mp3_path);
                         }
-                    } */
+                    }
                     exit(EXIT_SUCCESS);
                 }
                 else
