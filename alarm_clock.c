@@ -74,8 +74,9 @@ int main(void)
                 {
                     sleep(diff_t);
                     printf("alarm! \n");
+                    exec();
                     // clear();
-                    exit(3);
+                    exit(EXIT_SUCCESS);
                 }
                 else
                 {
@@ -97,13 +98,44 @@ int main(void)
             {
                 if (alarms[i].time > time(NULL))
                 {
-                    printf("Alarm %d at: %s \n", alarms[i].pid, alarms[i].timestring);
+                    printf("Alarm %d with PID %d at: %s \n", i + 1, alarms[i].pid, alarms[i].timestring);
                 }
             }
             break;
 
         case (99): // cancel
             printf("Answer was c \n");
+            // clear();
+            printf("Alarms: \n");
+            for (int i = 0; i < NUMBER_ALARMS; i++)
+            {
+                if (alarms[i].time > time(NULL))
+                {
+                    printf("Alarm %d with PID %d at: %s \n", i + 1, alarms[i].pid, alarms[i].timestring);
+                }
+            }
+
+            int pid_to_cancel;
+            printf("Give PID of alarm you want to cancel. \n");
+            if (scanf("%d", &pid_to_cancel))
+            {
+                for (int i = 0; i < NUMBER_ALARMS; i++)
+                {
+                    if (alarms[i].pid == pid_to_cancel)
+                    {
+                        printf("Deleting alarm %d with PID %d at: %s \n", i + 1, alarms[i].pid, alarms[i].timestring);
+                        kill(pid_to_cancel, SIGKILL);
+                        alarms[i].time = 1;
+                    }
+                }
+            }
+            else
+            {
+                // handle error
+            }
+
+            // printf("%d \n", pid_to_cancel);
+
             break;
         case (120): // exit
             printf("Exiting... \n");
@@ -114,5 +146,8 @@ int main(void)
             break;
         } // switch
         clear();
+
+        // kills existing zombies
+        waitpid(-1, NULL, WNOHANG);
     } // while loop
 } // main
