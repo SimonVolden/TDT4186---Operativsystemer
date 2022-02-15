@@ -1,4 +1,3 @@
-
 /**
  * @file alarm_clock.c
  * @author Simonevo
@@ -10,7 +9,7 @@
  * A unix-based alarm clock implemented in C.
  * Some utility functions are placed in the utilities.c file,
  * this is functions like clear input, check correct time format etc.
- * The test documentation task is written at the bottom of this file.
+ * The test documentation task is written in the README.
  *
  */
 
