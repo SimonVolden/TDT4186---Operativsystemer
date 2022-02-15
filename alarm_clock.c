@@ -30,7 +30,6 @@ int main(void)
         time_t time;
         int pid;
         char timestring[MAX_LIMIT];
-        char mp3_path[50];
     };
     struct Alarm alarms[NUMBER_ALARMS] = {0};
 
@@ -82,6 +81,19 @@ int main(void)
             else
             {
                 printf("Difference: %d\n", diff_t);
+                printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3', 3:'firealarm.mp3'} \n");
+
+                scanf("%d", &ringtone_index);
+
+                if (ringtone_index > 3 || ringtone_index < 0)
+                {
+                    printf("Invalid ringtone, choosing default ringtone \n");
+                    ringtone_index = 0;
+                }
+                else
+                {
+                    printf("You have chosen ringtone: %s \n", ringtones[ringtone_index]);
+                }
 
                 int pid = fork();
 
@@ -92,10 +104,10 @@ int main(void)
                     // does not work on WSL, works on linux with mpg123 installed
                     for (int i = 0; i < NUMBER_ALARMS; i++)
                     {
-                        if (alarms[i].pid = getpid())
+                        if (alarms[i].pid == getpid())
                         {
-                            // execlp("mpg123", "-q", alarms[i].mp3_path, NULL);
-                            printf(alarms[i].mp3_path);
+                            // execlp("mpg123", "-q", ringtones[ringtone_index], NULL);
+                            printf("%s\n", ringtones[ringtone_index]);
                         }
                     }
                     exit(EXIT_SUCCESS);
@@ -103,24 +115,10 @@ int main(void)
                 else
                 {
                     clear();
-                    printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3', 3:'firealarm.mp3'} \n");
-
-                    scanf("%d", &ringtone_index);
-
-                    if (ringtone_index > 3 || ringtone_index < 0)
-                    {
-                        printf("Invalid ringtone, choosing default ringtone \n");
-                        ringtone_index = 0;
-                    }
-                    else
-                    {
-                        printf("You have chosen ringtone: %s \n", ringtones[ringtone_index]);
-                    }
 
                     struct Alarm alarm;
                     alarm.pid = pid;
                     alarm.time = result;
-                    strcpy(alarm.mp3_path, ringtones[ringtone_index]);
                     strcpy(alarm.timestring, T);
                     alarms[number_of_alarms] = alarm;
                     number_of_alarms++;
