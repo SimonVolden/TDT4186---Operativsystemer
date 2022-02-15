@@ -41,7 +41,7 @@ int main(void)
     int x = 1;
     int ch = 0;
     int number_of_alarms = 0;
-    char ringtones[4][50] = {"ringtone.mp3", "ringtone2.mp3", "bikebell.mp3", "firealarm.mp3"};
+    char ringtones[4][50] = {"ringtone.mp3", "ringtone2.mp3", "bikebell.mp3"};
     int ringtone_index;
     printf("Welcome to the alarm clock! It is currently %s \n", buffer);
 
@@ -81,7 +81,7 @@ int main(void)
             else
             {
                 printf("Difference: %d\n", diff_t);
-                printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3', 3:'firealarm.mp3'} \n");
+                printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3'} \n");
 
                 scanf("%d", &ringtone_index);
 
