@@ -63,21 +63,6 @@ int main(void)
 
             fgets(T, MAX_LIMIT, stdin);
 
-            clear();
-            printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3', 3:'firealarm.mp3'} \n");
-
-            scanf("%d", &ringtone_index);
-
-            if (ringtone_index > 3 || ringtone_index < 0)
-            {
-                printf("Invalid ringtone, choosing default ringtone");
-                ringtone_index = 0;
-            }
-            else
-            {
-                printf("You have chosen ringtone: %s", ringtones[ringtone_index]);
-            }
-
             now = time(NULL);
 
             if (check_format_time(result_p, T))
@@ -116,11 +101,25 @@ int main(void)
                 }
                 else
                 {
+                    clear();
+                    printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3', 3:'firealarm.mp3'} \n");
+
+                    scanf("%d", &ringtone_index);
+
+                    if (ringtone_index > 3 || ringtone_index < 0)
+                    {
+                        printf("Invalid ringtone, choosing default ringtone \n");
+                        ringtone_index = 0;
+                    }
+                    else
+                    {
+                        printf("You have chosen ringtone: %s \n", ringtones[ringtone_index]);
+                    }
+
                     struct Alarm alarm;
                     alarm.pid = pid;
                     alarm.time = result;
                     strcpy(alarm.mp3_path, ringtones[ringtone_index]);
-                    ringtone_index++;
                     strcpy(alarm.timestring, T);
                     alarms[number_of_alarms] = alarm;
                     number_of_alarms++;
