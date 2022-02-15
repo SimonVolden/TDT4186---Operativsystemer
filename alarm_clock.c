@@ -7,8 +7,8 @@
  * @brief Practical 1
  * @date 2022-02-15
  *
- * A unix-based alarm clock implemeted with C.
- * some utility functions are placed in the utilities.c file,
+ * A unix-based alarm clock implemented in C.
+ * Some utility functions are placed in the utilities.c file,
  * this is functions like clear input, check correct time format etc.
  * The test documentation task is written at the bottom of this file.
  *
@@ -102,7 +102,7 @@ int main(void)
                     sleep(diff_t);
                     printf("alarm! \n");
                     // does not work on WSL, works on linux with mpg123 installed
-                    // execlp("mpg123", "-q", ringtones[ringtone_index], NULL);
+                    execlp("mpg123", "-q", ringtones[ringtone_index], NULL);
 
                     exit(EXIT_SUCCESS);
                 }
@@ -189,34 +189,3 @@ int main(void)
         waitpid(-1, NULL, WNOHANG);
     } // while loop
 } // main
-
-/**
- * @brief TEST CASE 1
- * Set three alarms with different timing,
- * and each a different ringtone,
- * then see if all alarms goes off in the right order,
- * and with the right sound. One should also press "l"
- * and check if all alarms are in the list
- */
-
-/**
- * @brief TEST CASE 2
- * Set three different alarms with different timings.
- * One should be written with a illegal time format
- * this alarm should not be listed with l
- */
-
-/**
- * @brief TEST CASE 3
- * Set three different alarms with different timings.
- * Check all alarms are listed with l.
- * Cancel one of the alarm with c.
- * Check that the cancelled alarm does not show up in list from l.
- */
-
-/**
- * @brief TEST CASE 4
- * Set a new alarm, then use exit to quit the program.
- * Check that the alarm child process is terminated.
- * The process should be terminated and zombie removed.
- */
