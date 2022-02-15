@@ -1,3 +1,19 @@
+
+/**
+ * @file alarm_clock.c
+ * @author Simonevo
+ * @author Siguhau
+ * @author Andrhae
+ * @brief Practical 1
+ * @date 2022-02-15
+ *
+ * A unix-based alarm clock implemeted with C.
+ * some utility functions are placed in the utilities.c file,
+ * this is functions like clear input, check correct time format etc.
+ * The test documentation task is written at the bottom of this file.
+ *
+ */
+
 #include "alarm_clock.h"
 
 int main(void)
@@ -14,6 +30,7 @@ int main(void)
         time_t time;
         int pid;
         char timestring[MAX_LIMIT];
+        char mp3_path[50];
     };
     struct Alarm alarms[NUMBER_ALARMS] = {0};
 
@@ -25,14 +42,14 @@ int main(void)
     int x = 1;
     int ch = 0;
     int number_of_alarms = 0;
-
+    char ringtones[4][50] = {"ringtone.mp3", "ringtone2.mp3", "bikebell.mp3", "firealarm.mp3"};
+    int ringtone_index;
     printf("Welcome to the alarm clock! It is currently %s \n", buffer);
 
     while (x)
     {
 
         printf("Please enter 's' (schedule), 'l' (list), 'c' (cancel), 'x' (exit) \n");
-        // scanf("%c", &answer);
 
         ch = getchar();
 
@@ -42,11 +59,24 @@ int main(void)
             clear();
 
             printf("Answer was s \n");
-            printf("Schedule alarm at which date and time? ");
+            printf("Schedule alarm at which date and time? \n");
 
-            // scanf("%19s", T);
             fgets(T, MAX_LIMIT, stdin);
-            printf("%s \n", T);
+
+            clear();
+            printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3', 3:'firealarm.mp3'} \n");
+
+            scanf("%d", &ringtone_index);
+
+            if (ringtone_index > 3 || ringtone_index < 0)
+            {
+                printf("Invalid ringtone, choosing default ringtone");
+                ringtone_index = 0;
+            }
+            else
+            {
+                printf("You have chosen ringtone: %s", ringtones[ringtone_index]);
+            }
 
             now = time(NULL);
 
@@ -74,8 +104,14 @@ int main(void)
                 {
                     sleep(diff_t);
                     printf("alarm! \n");
-                    exec();
-                    // clear();
+                    // does not work on WSL, works on linux with mpg123 installed
+                    /* for (int i = 0; i < NUMBER_ALARMS; i++)
+                    {
+                        if (alarms[i].pid = getpid())
+                        {
+                            execlp("mpg123", "-q", alarms[i].mp3_path, NULL);
+                        }
+                    } */
                     exit(EXIT_SUCCESS);
                 }
                 else
@@ -83,6 +119,8 @@ int main(void)
                     struct Alarm alarm;
                     alarm.pid = pid;
                     alarm.time = result;
+                    strcpy(alarm.mp3_path, ringtones[ringtone_index]);
+                    ringtone_index++;
                     strcpy(alarm.timestring, T);
                     alarms[number_of_alarms] = alarm;
                     number_of_alarms++;
@@ -91,8 +129,8 @@ int main(void)
             }
             break;
 
-        case (108):
-            printf("Answer was l \n"); // list alarms
+        case (108): // list alarms
+            printf("Answer was l \n");
 
             for (int i = 0; i < NUMBER_ALARMS; i++)
             {
@@ -105,7 +143,6 @@ int main(void)
 
         case (99): // cancel
             printf("Answer was c \n");
-            // clear();
             printf("Alarms: \n");
             for (int i = 0; i < NUMBER_ALARMS; i++)
             {
@@ -126,6 +163,7 @@ int main(void)
                         printf("Deleting alarm %d with PID %d at: %s \n", i + 1, alarms[i].pid, alarms[i].timestring);
                         kill(pid_to_cancel, SIGKILL);
                         alarms[i].time = 1;
+                        alarms[i].pid = 0;
                     }
                 }
             }
@@ -133,14 +171,24 @@ int main(void)
             {
                 // handle error
             }
-
-            // printf("%d \n", pid_to_cancel);
-
             break;
+
         case (120): // exit
             printf("Exiting... \n");
             x = 0;
+
+            for (int i = 0; i < NUMBER_ALARMS; i++)
+            {
+                if (alarms[i].pid != 0)
+                {
+                    printf("Deleting alarm %d with PID %d at: %s \n", i + 1, alarms[i].pid, alarms[i].timestring);
+                    kill(alarms[i].pid, SIGKILL);
+                    alarms[i].time = 1;
+                    alarms[i].pid = 0;
+                }
+            }
             break;
+
         default: // error, incorrect input
             printf("Error! \n");
             break;
@@ -151,3 +199,34 @@ int main(void)
         waitpid(-1, NULL, WNOHANG);
     } // while loop
 } // main
+
+/**
+ * @brief TEST CASE 1
+ * Set three alarms with different timing,
+ * and each a different ringtone,
+ * then see if all alarms goes off in the right order,
+ * and with the right sound. One should also press "l"
+ * and check if all alarms are in the list
+ */
+
+/**
+ * @brief TEST CASE 2
+ * Set three different alarms with different timings.
+ * One should be written with a illegal time format
+ * this alarm should not be listed with l
+ */
+
+/**
+ * @brief TEST CASE 3
+ * Set three different alarms with different timings.
+ * Check all alarms are listed with l.
+ * Cancel one of the alarm with c.
+ * Check that the cancelled alarm does not show up in list from l.
+ */
+
+/**
+ * @brief TEST CASE 4
+ * Set a new alarm, then use exit to quit the program.
+ * Check that the alarm child process is terminated.
+ * The process should be terminated and zombie removed.
+ */
