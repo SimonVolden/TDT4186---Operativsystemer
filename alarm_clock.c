@@ -41,7 +41,7 @@ int main(void)
     int x = 1;
     int ch = 0;
     int number_of_alarms = 0;
-    char ringtones[4][50] = {"ringtone.mp3", "ringtone2.mp3", "bikebell.mp3"};
+    char ringtones[3][50] = {"ringtone.mp3", "ringtone2.mp3", "bikebell.mp3"};
     int ringtone_index;
     printf("Welcome to the alarm clock! It is currently %s \n", buffer);
 
@@ -62,15 +62,29 @@ int main(void)
 
             fgets(T, MAX_LIMIT, stdin);
 
-            now = time(NULL);
-
             if (check_format_time(result_p, T))
             {
                 fprintf(stderr, "Could not convert time input to time_t\n");
                 break;
             }
 
+            printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3'} \n");
+
+            scanf("%d", &ringtone_index);
+
+            if (ringtone_index > 2 || ringtone_index < 0)
+            {
+                printf("Invalid ringtone, choosing default ringtone \n");
+                ringtone_index = 0;
+            }
+            else
+            {
+                printf("You have chosen ringtone: %s \n", ringtones[ringtone_index]);
+            }
+
+            now = time(NULL);
             diff_t = (int)difftime(result, now);
+            printf("Difference: %d\n", diff_t);
 
             if (diff_t < 0)
             {
@@ -80,20 +94,6 @@ int main(void)
             }
             else
             {
-                printf("Difference: %d\n", diff_t);
-                printf("Select ringtone: {0:'ringtone.mp3', 1:'ringtone2.mp3', 2:'bikebell.mp3'} \n");
-
-                scanf("%d", &ringtone_index);
-
-                if (ringtone_index > 3 || ringtone_index < 0)
-                {
-                    printf("Invalid ringtone, choosing default ringtone \n");
-                    ringtone_index = 0;
-                }
-                else
-                {
-                    printf("You have chosen ringtone: %s \n", ringtones[ringtone_index]);
-                }
 
                 int pid = fork();
 
@@ -103,14 +103,11 @@ int main(void)
                     printf("alarm! \n");
                     // does not work on WSL, works on linux with mpg123 installed
                     // execlp("mpg123", "-q", ringtones[ringtone_index], NULL);
-                    printf("%s\n", ringtones[ringtone_index]);
 
                     exit(EXIT_SUCCESS);
                 }
                 else
                 {
-                    clear();
-
                     struct Alarm alarm;
                     alarm.pid = pid;
                     alarm.time = result;
