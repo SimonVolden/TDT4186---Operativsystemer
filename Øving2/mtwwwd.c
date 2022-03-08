@@ -1,11 +1,12 @@
-#define PORT 6789
 #define MAXREQ (4096 * 1024)
 #include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netdb.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 char buffer[MAXREQ], body[MAXREQ], msg[MAXREQ];
 void error(const char *msg)
@@ -40,8 +41,29 @@ int getaddrinfo(const char *node,
 
 int connect(int socket, const struct sockaddr *address, socklen_t address_len);
 
-int main()
+int main(int argc, char *argv[])
 {
+
+    /* FILE *file;
+    file = fopen(argv[1], "r");
+
+    char content[1024];
+
+    while (fgets(content, sizeof(content), file))
+    {
+        printf(content);
+    } */
+
+    int counter = 0;
+
+    char path[100];
+
+    char *a = argv[2];
+
+    int PORT = atoi(a);
+
+    printf("port: %d\n", PORT);
+
     int sockfd, newsockfd;
     socklen_t clilen;
     struct addrinfo *serverinfo;
@@ -50,7 +72,7 @@ int main()
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
-    bzero((char *)&serv_addr, sizeof(serv_addr));
+    memset((char *)&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     // AF_ITEN6 == IPv6
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -61,8 +83,9 @@ int main()
         error("ERROR on binding");
     }
     listen(sockfd, 5);
-    while (1)
+    while (counter < 100)
     {
+        counter += 1;
         clilen = sizeof(cli_addr);
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
                            &clilen);
@@ -71,18 +94,41 @@ int main()
             error("ERROR on accept");
             exit(EXIT_FAILURE); // Kanskje fjern
         }
-        bzero(buffer, sizeof(buffer));
+        memset(buffer, 0, sizeof(buffer));
         n = read(newsockfd, buffer, sizeof(buffer) - 1);
         if (n < 0)
             error("ERROR reading from socket");
+
+        /* get path */
+        char buffercpy[MAXREQ];
+        strcpy(buffercpy, buffer);
+        char *token;
+        token = strtok(buffercpy, " ");
+        printf("Request type: %s\n", token);
+        token = strtok(NULL, " ");
+        printf("Request path: %s\n", token);
+
+        FILE *file;
+        file = fopen("TDT4186---Operativsystemer/Øving2/doc/index.html", "r");
+
+        char content[1024];
+
+        char buffer[1024];
+
+        while (fgets(*buffer, sizeof(buffer), file))
+        {
+            strcat(content, buffer);
+        }
         snprintf(body, sizeof(body),
-                 "<html>\n<body>\n <h1>Hello web browser</h1>\nYour request was\n <pre>%s</pre>\n </body>\n</html>\n",
+                 "<html>\n<body>\n <h1>Hello web browser</h1>\nYour request was\n <link rel='shortcut icon' href='favicon.ico'/> \n <pre>%s</pre>\n  </body>\n</html>\n",
                  buffer);
+
         snprintf(msg, sizeof(msg),
-                 "HTTP/1.0 200 OK\n"
+                 "HTTP/1.1 200 OK\n"
                  "Content-Type: text/html\n"
                  "Content-Length: %d\n\n%s",
                  strlen(body), body);
+
         n = write(newsockfd, msg, strlen(msg)); // Det som faktisk sendes, clienten leser på denne socketen
         if (n < 0)
             error("ERROR writing to socket");
