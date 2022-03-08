@@ -15,51 +15,20 @@ void error(const char *msg)
     exit(1);
 }
 
-/**
- * @brief https://stackoverflow.com/questions/42641936/what-does-struct-sockaddr-in-servaddr-clientaddr-mean
- *
- */
-/* struct sockaddr_in
-{
-    short sin_family;        // e.g. AF_INET, AF_INET6
-    unsigned short sin_port; // e.g. htons(3490)
-    struct in_addr sin_addr; // see struct in_addr, below
-    char sin_zero[8];        // zero this if you want to
-};
-
-struct in_addr
-{
-    unsigned long s_addr; // load with inet_pton()
-};
-
-*/
-
-int getaddrinfo(const char *node,
-                const char *service,
-                const struct addrinfo *hints,
-                struct addrinfo **res);
-
-int connect(int socket, const struct sockaddr *address, socklen_t address_len);
+char path[256];
+char root[256];
+FILE *fp;
+char* fbuffer = NULL;
 
 int main(int argc, char *argv[])
 {
 
-    /* FILE *file;
-    file = fopen(argv[1], "r");
-
-    char content[1024];
-
-    while (fgets(content, sizeof(content), file))
-    {
-        printf(content);
-    } */
-
+    strcpy(root, "/home/andrhae/prog/opsystem/webserver"); //dette er root som skal settes fra args
+    printf("root: %s\n", root);
+    
     int counter = 0;
-
     char path[100];
-
     char *a = argv[2];
-
     int PORT = atoi(a);
 
     printf("port: %d\n", PORT);
@@ -69,6 +38,7 @@ int main(int argc, char *argv[])
     struct addrinfo *serverinfo;
     struct sockaddr_in serv_addr, cli_addr;
     int n;
+    
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
@@ -108,21 +78,30 @@ int main(int argc, char *argv[])
         token = strtok(NULL, " ");
         printf("Request path: %s\n", token);
 
-        FILE *file;
-        file = fopen("TDT4186---Operativsystemer/Øving2/doc/index.html", "r");
+        strcpy(path, root);
+        strcat(path, token);
+        printf("full path: %s\n", path);
 
-        char content[1024];
-
-        char buffer[1024];
-
-        while (fgets(*buffer, sizeof(buffer), file))
-        {
-            strcat(content, buffer);
+        if ((fp = fopen(path, "r")) == NULL) {
+            printf("error\n");
+            //add 404 error here
+        } else {
+            size_t len;
+            ssize_t bytes_read = getdelim( &fbuffer, &len, '\0', fp);
+            if ( bytes_read != -1) {
+            /* Success, now the entire file is in the buffer */
+            }
+            fclose(fp);
         }
-        snprintf(body, sizeof(body),
-                 "<html>\n<body>\n <h1>Hello web browser</h1>\nYour request was\n <link rel='shortcut icon' href='favicon.ico'/> \n <pre>%s</pre>\n  </body>\n</html>\n",
-                 buffer);
-
+        if (fbuffer != NULL) {
+            strcpy(body, fbuffer);
+        } else {
+            snprintf(body, sizeof(body), 
+                    "<html>\n<body>\n"
+                    "<h1>Hello web browser</h1>\nYour request was\n"
+                    "<pre>%s</pre>\n"
+                    "</body>\n</html>", buffer);
+        }
         snprintf(msg, sizeof(msg),
                  "HTTP/1.1 200 OK\n"
                  "Content-Type: text/html\n"
