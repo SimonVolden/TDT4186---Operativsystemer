@@ -18,17 +18,17 @@ void error(const char *msg)
 char path[256];
 char root[256];
 FILE *fp;
-char* fbuffer = NULL;
+char *fbuffer = NULL;
 
 int main(int argc, char *argv[])
 {
 
-    strcpy(root, "/home/andrhae/prog/opsystem/webserver"); //dette er root som skal settes fra args
+    strcpy(root, argv[2]); // dette er root som skal settes fra args
     printf("root: %s\n", root);
-    
+
     int counter = 0;
     char path[100];
-    char *a = argv[2];
+    char *a = argv[1];
     int PORT = atoi(a);
 
     printf("port: %d\n", PORT);
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     struct addrinfo *serverinfo;
     struct sockaddr_in serv_addr, cli_addr;
     int n;
-    
+
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
@@ -53,9 +53,10 @@ int main(int argc, char *argv[])
         error("ERROR on binding");
     }
     listen(sockfd, 5);
-    while (counter < 100)
+    while (counter < 50)
     {
         counter += 1;
+        printf("Ready to take requests on port: %d", PORT);
         clilen = sizeof(cli_addr);
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
                            &clilen);
@@ -82,25 +83,33 @@ int main(int argc, char *argv[])
         strcat(path, token);
         printf("full path: %s\n", path);
 
-        if ((fp = fopen(path, "r")) == NULL) {
+        if ((fp = fopen(path, "r")) == NULL)
+        {
             printf("error\n");
-            //add 404 error here
-        } else {
+            // add 404 error here
+        }
+        else
+        {
             size_t len;
-            ssize_t bytes_read = getdelim( &fbuffer, &len, '\0', fp);
-            if ( bytes_read != -1) {
-            /* Success, now the entire file is in the buffer */
+            ssize_t bytes_read = getdelim(&fbuffer, &len, '\0', fp);
+            if (bytes_read != -1)
+            {
+                /* Success, now the entire file is in the buffer */
             }
             fclose(fp);
         }
-        if (fbuffer != NULL) {
+        if (fbuffer != NULL)
+        {
             strcpy(body, fbuffer);
-        } else {
-            snprintf(body, sizeof(body), 
-                    "<html>\n<body>\n"
-                    "<h1>Hello web browser</h1>\nYour request was\n"
-                    "<pre>%s</pre>\n"
-                    "</body>\n</html>", buffer);
+        }
+        else
+        {
+            snprintf(body, sizeof(body),
+                     "<html>\n<body>\n"
+                     "<h1>Hello web browser</h1>\nYour request was\n"
+                     "<pre>%s</pre>\n"
+                     "</body>\n</html>",
+                     buffer);
         }
         snprintf(msg, sizeof(msg),
                  "HTTP/1.1 200 OK\n"

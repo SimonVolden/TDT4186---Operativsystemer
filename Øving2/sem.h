@@ -45,8 +45,6 @@ SEM *sem_init(int initVal);
  * nevertheless the semaphore handle must not be used any more.
  */
 
-int sem_del(SEM *sem);
-
 /* P (wait) operation.
  *
  * Attempts to decrement the semaphore value by 1. If the semaphore value
