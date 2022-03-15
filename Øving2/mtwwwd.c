@@ -7,6 +7,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 char buffer[MAXREQ], body[MAXREQ], msg[MAXREQ];
 void error(const char *msg)
@@ -53,10 +54,10 @@ int main(int argc, char *argv[])
         error("ERROR on binding");
     }
     listen(sockfd, 5);
-    while (counter < 50)
+    // thread
+    while (1)
     {
-        counter += 1;
-        printf("Ready to take requests on port: %d", PORT);
+        printf("Ready to take requests on port: %d\n", PORT);
         clilen = sizeof(cli_addr);
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
                            &clilen);
@@ -65,6 +66,10 @@ int main(int argc, char *argv[])
             error("ERROR on accept");
             exit(EXIT_FAILURE); // Kanskje fjern
         }
+
+        // legg til newsockfd i buffer
+        // kjør loop på nytt
+
         memset(buffer, 0, sizeof(buffer));
         n = read(newsockfd, buffer, sizeof(buffer) - 1);
         if (n < 0)
@@ -78,18 +83,23 @@ int main(int argc, char *argv[])
         printf("Request type: %s\n", token);
         token = strtok(NULL, " ");
         printf("Request path: %s\n", token);
-
         strcpy(path, root);
+
+        // check if default route
+        if (token[1] == 0)
+            strcpy(token, "/index.html");
+
         strcat(path, token);
         printf("full path: %s\n", path);
 
         if ((fp = fopen(path, "r")) == NULL)
         {
-            printf("error\n");
-            // add 404 error here
+            printf("error: couldn't open file\n");
+            fbuffer = NULL;
         }
         else
         {
+
             size_t len;
             ssize_t bytes_read = getdelim(&fbuffer, &len, '\0', fp);
             if (bytes_read != -1)
@@ -98,29 +108,35 @@ int main(int argc, char *argv[])
             }
             fclose(fp);
         }
+        // sends page if found
         if (fbuffer != NULL)
         {
             strcpy(body, fbuffer);
+
+            snprintf(msg, sizeof(msg),
+                     "HTTP/1.0 200 OK\n"
+                     "Content-Type: text/html\n"
+                     "Content-Length: %d\n\n%s",
+                     strlen(body), body);
         }
-        else
+        else // sends 404 if page not found
         {
             snprintf(body, sizeof(body),
                      "<html>\n<body>\n"
-                     "<h1>Hello web browser</h1>\nYour request was\n"
-                     "<pre>%s</pre>\n"
-                     "</body>\n</html>",
-                     buffer);
-        }
-        snprintf(msg, sizeof(msg),
-                 "HTTP/1.1 200 OK\n"
-                 "Content-Type: text/html\n"
-                 "Content-Length: %d\n\n%s",
-                 strlen(body), body);
+                     "<h1>Not Found</h1>\n"
+                     "The requested URL was not found.\n"
+                     "</body>\n</html>");
 
-        n = write(newsockfd, msg, strlen(msg)); // Det som faktisk sendes, clienten leser på denne socketen
+            snprintf(msg, sizeof(msg),
+                     "HTTP/1.0 404 Not Found\n"
+                     "Content-Type: text/html\n"
+                     "Content-Length: %d\n\n%s",
+                     strlen(body), body);
+        }
+        n = write(newsockfd, msg, strlen(msg));
         if (n < 0)
             error("ERROR writing to socket");
         close(newsockfd);
-        printf("ENDS");
+        printf("socket closed\n");
     }
 }

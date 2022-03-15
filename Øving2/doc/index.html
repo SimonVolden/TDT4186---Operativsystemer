@@ -1,10 +1,194 @@
+<!DOCTYPE html>
 
-<!doctype html>
 <html>
   <head>
-    <title>This is the title of the webpage!</title>
+    <meta charset="utf-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="main.js"></script>
+    <script type="application/javascript"></script>
   </head>
   <body>
-    <p>This is an example paragraph. Anything in the <strong>body</strong> tag will appear on the page, just like this <strong>p</strong> tag and its contents.</p>
+    <div class="page">
+      <div class="parent">
+        <div class="parent_row">
+          <div class="child">
+            <svg
+              width="600"
+              height="600"
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect
+                id="background"
+                x="50"
+                y="50"
+                width="500"
+                height="500"
+                fill="rgb(255, 195, 191)"
+              />
+              <circle
+                class="circle-animation"
+                id="yellowcircle"
+                cx="280"
+                cy="420"
+                r="70"
+                fill="rgb(254, 189, 87)"
+              ></circle>
+              <animateMotion
+                xlink:href="#yellowcircle"
+                attributeType="CSS"
+                attributeName="cx"
+                path="M 0 0 H -150 Z"
+                dur="2s"
+                repeatCount="1"
+                begin="click"
+              />
+
+              <circle
+                id="orangecircle"
+                cx="250"
+                cy="217"
+                r="50"
+                fill="rgb(255, 145, 75)"
+              />
+
+              <animateMotion
+                xlink:href="#orangecircle"
+                attributeType="CSS"
+                attributeName="cx"
+                path="M 0 0 H -140 Z"
+                repeatCount="1"
+                dur="2.5s"
+                begin="click"
+              />
+              <g id="semicircle1" transform="rotate(200, 165, 90)">
+                <path
+                  d="M 0 100
+                      A 50 50 0 0 1 100 100
+                      L 0 100
+                      Z"
+                  fill="rgb(245, 37, 36)"
+                />
+              </g>
+              <animateMotion
+                xlink:href="#semicircle1"
+                attributeType="CSS"
+                attributeName="transform"
+                type="translate"
+                path="M 0 0 H 140 Z"
+                dur="2s"
+                repeatCount="1"
+                begin="click"
+              />
+
+              <!-- https://codepen.io/dmoshal/pen/gWZKPP -->
+              <g id="semicircle2" transform="rotate(160, 150, 200)">
+                <path
+                  d="M 0 100
+                      A 80 80 0 0 1 160 100
+                      L 0 100
+                      Z"
+                  fill="rgb(245, 37, 36)"
+                />
+              </g>
+              <animateMotion
+                xlink:href="#semicircle2"
+                attributeType="CSS"
+                attributeName="transform"
+                type="translate"
+                path="M 0 0 H 140 Z"
+                dur="1s"
+                repeatCount="1"
+                begin="click"
+              />
+            </svg>
+            <h1>SVG</h1>
+          </div>
+          <div class="child">
+            <script src="canvas.js"></script>
+            <body onload="draw();">
+              <canvas id="canvas" width="600" height="600"></canvas>
+            </body>
+            <h1>Canvas</h1>
+          </div>
+        </div>
+        <div class="child">
+          <p1>
+            Interactive art, inspired by
+            <a href="https://no.pinterest.com/pin/2955555992677185/"
+              >Pinterest</a
+            >
+          </p1>
+        </div>
+        <div class="child">
+          <p1> Psst try clicking on the shapes ;) </p1>
+        </div>
+        <div class="child">
+          <h1>Documentation</h1>
+          <div class="hide" id="art">
+            <p>
+              CSS is used to align content and text, and make the website react
+              to different browser-sizes. This is done by making a style.css
+              file, and making custom css classes for the different containers.
+              These are then used in the HTML file. I have chosen to go for a
+              simple layout where the content is centered, with the two
+              "art-pieces" next to each other, but if the browser-window is too
+              small, they will render underneath each other.
+            </p>
+            <p>
+              I have created two "artworks" which are created using two
+              different methods, one using hardcoded SVG, and the other using
+              the Canvas API. Both are based on the same painting, and both are
+              animated. However they are drawn and animated in two different
+              ways. The one on the left (svg) is drawn and animated using SVG
+              and animateMotion, while the one on the right is drawn and
+              animated using Canvas and javascript-logic.
+            </p>
+            <p>
+              The animations are also a bit different between the two, with the
+              one on the left having shapes which move from side to side, while
+              the one on the right "exploding" and bouncing with some physics.
+              The reason why I have chosen to bot make the two animations the
+              same, is that I want to highlight the different strengths and
+              weaknesses between the two animation API's. On one hand CSS
+              keyframes are easy to use when having figures move to
+              predetermined positions, but is not optimal for physics like
+              movement. Using Canvas, the shapes can be drawn in a set position
+              each frame, and this can be easily controlled by using some
+              javascript code.
+            </p>
+            <p>
+              jQuery is used to show and hide this documentation, using some
+              simple logic on the button below, in combination with css styling.
+            </p>
+            <p>
+              Cross-browser testing has been conducted by opening the website in
+              three different browsers: Opera-GX, Google Chrome and Microsoft
+              Edge. It has been observed that the site behaves identically
+              between these browsers.
+            </p>
+            <h1>Sources and inspiration:</h1>
+            <p><a href="https://www.w3schools.com/">w3schools.com</a></p>
+            <p>
+              <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/"
+                >CSS-tricks</a
+              >
+            </p>
+            <p>
+              <a href="https://codepen.io/dmoshal/pen/gWZKPP"
+                >Creating a SVG semicircle</a
+              >
+            </p>
+            <p>
+              <a href="https://developer.mozilla.org/en-US/docs/Web/SVG"
+                >SVG documentation</a
+              >
+            </p>
+          </div>
+          <button id="btn">Click for documentation</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

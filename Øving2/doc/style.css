@@ -1,0 +1,48 @@
+.page{
+    display: flex;
+    justify-content: center;
+}
+
+.parent {
+    display: flex;
+    grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
+    grid-column-gap: 10px;
+    grid-row-gap: 10px;
+    flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: center;
+    height: auto;
+    width: auto;
+    max-width: 2000px;
+    
+}
+
+.parent_row {
+    display: flex;
+    grid-template-columns: 1fr fit-content(20%);
+    grid-column-gap: 10px;
+    grid-row-gap: 10px;
+    flex-wrap: wrap;
+    flex-direction: row;
+    width: auto;
+    
+}
+
+
+.child {
+    width: auto;
+    height: auto;
+    margin: auto;
+    text-align: center;
+    max-width: 750px;
+}
+
+.hide {
+    display: none;
+  }
+  
+  .myDIV:hover + .hide {
+    display: block;
+    
+  }
+

@@ -13,7 +13,7 @@ typedef struct SEM
 SEM *sem_init(int initVal)
 {
 
-    SEM *sem = malloc(sizeof(SEM));
+    SEM *sem = malloc(sizeof(struct SEM));
     if (!sem)
         goto Error1;
     sem->counter = initVal;
@@ -36,7 +36,7 @@ Error2:
 Error1:
     return NULL;
 }
-
+/*
 void P(SEM *sem)
 {
     if ((errno = pthread_cond_wait(&sem->cond, &sem->mutex)) != 0)
@@ -54,6 +54,24 @@ void P(SEM *sem)
         if (errno = pthread_mutex_ulock(&sem->mutex) != 0)
             return;
     }
+}
+*/
+
+void P(SEM *sem)
+{
+    pthread_mutex_lock(&sem->mutex);
+
+    // Wait for the semaphore to have a positive value.
+    while (sem->counter < 1)
+        pthread_cond_wait(&sem->cond, &sem->mutex);
+
+    --sem->counter;
+
+    // Wake up a thread that's waiting, if any.
+    if (sem->counter > 0)
+        pthread_cond_signal(&sem->cond);
+
+    pthread_mutex_unlock(&sem->mutex);
 }
 
 void V(SEM *sem)
