@@ -30,7 +30,6 @@ typedef struct BNDBUF BNDBUF;
  *
  * handle for the created bounded buffer, or NULL if an error occured.
  */
-
 BNDBUF *bb_init(unsigned int size);
 
 /* Destroys a Bounded Buffer.
@@ -41,7 +40,6 @@ BNDBUF *bb_init(unsigned int size);
  *
  * bb       Handle of the bounded buffer that shall be freed.
  */
-
 void bb_del(BNDBUF *bb);
 
 /* Retrieve an element from the bounded buffer.
@@ -58,7 +56,6 @@ void bb_del(BNDBUF *bb);
  *
  * the int element
  */
-
 int bb_get(BNDBUF *bb);
 
 /* Add an element to the bounded buffer.

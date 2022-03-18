@@ -1,4 +1,5 @@
 #ifndef SEM_H
+#include <pthread.h>
 #define SEM_H
 
 /*
@@ -12,7 +13,13 @@
 /* Opaque type of a semaphore.
  * ...you need to figure out the contents of struct SEM yourself!
  */
-typedef struct SEM SEM;
+typedef struct SEM
+{
+    volatile int counter;
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+
+} SEM;
 
 /* Creates a new semaphore.
  *
