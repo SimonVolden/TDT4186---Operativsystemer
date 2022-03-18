@@ -76,7 +76,12 @@ void bb_del(BNDBUF *bb)
 int bb_get(BNDBUF *bb)
 {
 
-    bb->fds[bb->semLowerLimit->counter]
+    /* SEM *sem_low;
+    sem_low = &bb->semLowerLimit; */
+
+    V(&bb->semLowerLimit);
+
+    return bb->fds[bb->semLowerLimit.counter];
 
     /*P
     V
@@ -86,6 +91,9 @@ int bb_get(BNDBUF *bb)
 void bb_add(BNDBUF *bb, int fd)
 {
 
+    P(&bb->semLowerLimit);
+
+    bb->fds[bb->semLowerLimit.counter] = fd;
     /*V
     P
     fds[x] = fd */
