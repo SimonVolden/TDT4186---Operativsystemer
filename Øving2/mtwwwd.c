@@ -140,3 +140,11 @@ int main(int argc, char *argv[])
         printf("socket closed\n");
     }
 }
+
+/**
+ * hver Threads må være en while, Disse lages før while i main
+ * Antallet threads skal være satt.
+ * De må ha en funksjon som hele tiden kaller bb get.
+ * Den blir blokkert dersom bb er tom
+ *
+ */

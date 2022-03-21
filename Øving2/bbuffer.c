@@ -4,97 +4,70 @@
 #include <pthread.h>
 #include <stdio.h>
 
-/*
-typedef struct Node
-{
-    int fd;
-    struct Node *next;
-}
-*/
-
 typedef struct BNDBUF
 {
     unsigned int size;
-
-    SEM semLowerLimit;
-    SEM semUpperLimit;
-
-    void *buffer_end;
-    size_t capacity;
-
-    size_t sz;
-    void *head;
-    void *tail;
-    //
-    int newest; // %10
+    int newest;
     int oldest;
 
-    int fds[];
+    SEM *semBufferFull;
+    SEM *semBufferEmpty;
+    pthread_mutex_t mutex;
+
+    int *buffer[];
 
 } BNDBUF;
 
 BNDBUF *bb_init(unsigned int size)
 {
-    SEM sem;
 
-    BNDBUF *bndbuf = malloc(sizeof(BNDBUF));
-    bndbuf->semLowerLimit = *sem_init(0);
-    bndbuf->semUpperLimit = *sem_init(size);
-    bndbuf->capacity = size;
-    int fds_temp[size]; // Kanskje unødvendig
-    bndbuf->fds[0] = fds_temp;
-
-    if (!bndbuf)
-    {
-        goto Error1;
-    }
+    BNDBUF *bndbuf = malloc(sizeof(struct BNDBUF));
 
     bndbuf->size = size;
-
-    return bndbuf;
-
-Error1:
-    return ((void *)0);
+    bndbuf->newest = 0;
+    bndbuf->oldest = 0;
+    bndbuf->semBufferFull = sem_init(0);
+    bndbuf->semBufferEmpty = sem_init(size);
+    if (pthread_mutex_init(&bndbuf->mutex, NULL) != 0)
+    {
+        free(bndbuf);
+    }
 }
-
 void bb_del(BNDBUF *bb)
 {
 
-    // free(bb->buffer);
-    free(bb->semLowerLimit);
-    free(bb->semUpperLimit);
-    free(bb->buffer_end);
-    free(bb->capacity);
-    free(bb->sz);
-    free(bb->head);
-    free(bb->tail);
-    free(bb->newest);
-    free(bb->oldest);
-    free(bb->fds);
+    if (pthread_mutex_destroy(&bb->mutex) == 0)
+    {
+        // tror ikke det må noe inn her egentlig, kanskje errors?
+    }
+    if (sem_del(bb->semBufferEmpty) == 0)
+    {
+        // tror ikke det må noe inn her egentlig, kanskje errors?
+    }
+    if (sem_del(bb->semBufferFull) == 0)
+    {
+        // tror ikke det må noe inn her egentlig, kanskje errors?
+    }
+    free(bb);
 }
 
 int bb_get(BNDBUF *bb)
 {
-
-    /* SEM *sem_low;
-    sem_low = &bb->semLowerLimit; */
-
-    V(&bb->semLowerLimit);
-
-    return bb->fds[bb->semLowerLimit.counter];
-
-    /*P
-    V
-    return fds[x] */
+    P(bb->semBufferFull);
+pthread:
+    pthread_mutex_lock(&bb->mutex);
+    int returnInt = bb->buffer[bb->oldest];
+    bb->oldest = bb->oldest + 1 % bb->size;
+    pthread_mutex_unlock(&bb->mutex);
+    V(bb->semBufferEmpty);
+    return returnInt;
 }
 
 void bb_add(BNDBUF *bb, int fd)
 {
 
-    P(&bb->semLowerLimit);
-
-    bb->fds[bb->semLowerLimit.counter] = fd;
-    /*V
-    P
-    fds[x] = fd */
+    P(&bb->semBufferEmpty);
+    bb->buffer[bb->newest] = fd;
+    bb->newest++;
+    V(bb->semBufferFull);
 }
