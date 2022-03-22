@@ -13,13 +13,7 @@
 /* Opaque type of a semaphore.
  * ...you need to figure out the contents of struct SEM yourself!
  */
-typedef struct SEM
-{
-    volatile int counter;
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
-
-} SEM;
+typedef struct SEM SEM;
 
 /* Creates a new semaphore.
  *

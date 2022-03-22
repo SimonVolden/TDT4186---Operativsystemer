@@ -1,6 +1,8 @@
 #include "sem.h"
 #include <pthread.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct SEM
 {
@@ -13,28 +15,18 @@ typedef struct SEM
 SEM *sem_init(int initVal)
 {
 
+    printf("size of sem %d\n", sizeof(struct SEM));
     SEM *sem = malloc(sizeof(struct SEM));
-    if (!sem)
+    /*
+    if (sem == NULL)
         goto Error1;
+        */
     sem->counter = initVal;
-
-    errno = pthread_mutex_init(&sem->mutex, NULL);
-    if (!errno)
-        goto Error2;
-
-    errno = pthread_cond_init(&sem->cond, NULL);
-    if (!errno)
-        goto Error3;
-
+    printf("counter set, %d \n", sem->counter);
+    pthread_mutex_init(&sem->mutex, NULL);
+    pthread_cond_init(&sem->cond, NULL);
+    printf("sem counter: %d \n", sem->counter);
     return sem;
-    // TODO: LEGG TIL ERROR
-
-Error3:
-    pthread_mutex_destroy(&sem->mutex);
-Error2:
-    // free(buf); //TODO: Hva skal dette være?
-Error1:
-    return NULL;
 }
 /*
 void P(SEM *sem)
@@ -57,23 +49,37 @@ void P(SEM *sem)
 }
 */
 
-void P(SEM *sem)
+int sem_del(SEM *sem)
 {
-    pthread_mutex_lock(&sem->mutex);
-
-    // Wait for the semaphore to have a positive value.
-    while (sem->counter < 1)
-        pthread_cond_wait(&sem->cond, &sem->mutex);
-
-    --sem->counter;
-
-    // Wake up a thread that's waiting, if any.
-    if (sem->counter > 0)
-        pthread_cond_signal(&sem->cond);
-
-    pthread_mutex_unlock(&sem->mutex);
+    free(sem);
 }
 
+void P(SEM *sem)
+{
+    printf("locking value\n");
+    pthread_mutex_lock(&sem->mutex);
+    printf("locked value %d\n", sem->counter);
+    // Wait for the semaphore to have a positive value.
+    while (sem->counter < 1)
+    {
+        pthread_cond_wait(&sem->cond, &sem->mutex);
+        printf("got signaled\n");
+    }
+    // Wake up a thread that's waiting, if any.
+    // if (sem->counter > 0)
+    sem->counter--;
+    pthread_mutex_unlock(&sem->mutex);
+    printf("unlocked value\n");
+}
+
+void V(SEM *sem)
+{
+    pthread_mutex_lock(&sem->mutex);
+    sem->counter++;
+    pthread_mutex_unlock(&sem->mutex);
+    pthread_cond_signal(&sem->cond);
+}
+/*
 void V(SEM *sem)
 {
     if ((errno = pthread_mutex_lock(&sem->mutex)) != 0)
@@ -87,3 +93,5 @@ void V(SEM *sem)
     if ((errno = pthread_mutex_unlock(&sem->mutex) != 0))
         return;
 }
+
+*/

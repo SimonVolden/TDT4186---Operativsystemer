@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct BNDBUF
 {
@@ -20,18 +21,25 @@ typedef struct BNDBUF
 
 BNDBUF *bb_init(unsigned int size)
 {
+    // Initialize bbuffer structure
+    // how to use: struct BNDBUF *bbuffer = bb_init(BNDBUFSIZE)
 
     BNDBUF *bndbuf = malloc(sizeof(struct BNDBUF));
+    if (bndbuf == NULL)
+        printf("failed to allocate\n");
 
     bndbuf->size = size;
     bndbuf->newest = 0;
     bndbuf->oldest = 0;
     bndbuf->semBufferFull = sem_init(0);
     bndbuf->semBufferEmpty = sem_init(size);
+    printf("SIZE: %d \n", size);
     if (pthread_mutex_init(&bndbuf->mutex, NULL) != 0)
     {
         free(bndbuf);
+        printf("freed bb");
     }
+    return bndbuf;
 }
 void bb_del(BNDBUF *bb)
 {
@@ -54,7 +62,6 @@ void bb_del(BNDBUF *bb)
 int bb_get(BNDBUF *bb)
 {
     P(bb->semBufferFull);
-pthread:
     pthread_mutex_lock(&bb->mutex);
     int returnInt = bb->buffer[bb->oldest];
     bb->oldest = bb->oldest + 1 % bb->size;
@@ -65,9 +72,11 @@ pthread:
 
 void bb_add(BNDBUF *bb, int fd)
 {
-
-    P(&bb->semBufferEmpty);
+    printf("Starting adding\n");
+    P(bb->semBufferEmpty);
+    printf("Sending signal \n");
     bb->buffer[bb->newest] = fd;
-    bb->newest++;
+    bb->newest + 1 % bb->size;
+    printf("Sending wait \n");
     V(bb->semBufferFull);
 }
