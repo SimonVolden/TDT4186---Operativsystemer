@@ -20,7 +20,8 @@ void error(const char *msg)
 
 char root[256];
 
-void *doWork(void *arg)
+/* Makes the consumers load work from bbuffer and handle the request from clients */
+void *handle_request(void *arg)
 {
     char path[256];
     char *fbuffer = NULL;
@@ -30,7 +31,6 @@ void *doWork(void *arg)
     {
         /* get file descriptor from bbuffer */
         int fd;
-        printf("[Worker Thread %li]\n", (long)pthread_self());
         fd = bb_get((BNDBUF *)arg);
         if (fd)
         {
@@ -46,8 +46,10 @@ void *doWork(void *arg)
             strcpy(buffercpy, buffer);
             char *token;
             token = strtok(buffercpy, " ");
-            printf("Request type: %s\n", token);
+            printf("[Worker Thread %li] ", (long)pthread_self());
+            printf("Request type: %s; ", token);
             token = strtok(NULL, " ");
+
             printf("Request path: %s\n", token);
             strcpy(path, root);
 
@@ -58,6 +60,7 @@ void *doWork(void *arg)
             strcat(path, token);
             printf("full path: %s\n", path);
 
+            /* opens requested file, and writes content into fbuffer */
             if ((fp = fopen(path, "r")) == NULL)
             {
                 printf("error: couldn't open file\n");
@@ -89,7 +92,7 @@ void *doWork(void *arg)
             {
                 snprintf(body, sizeof(body),
                          "<html>\n<body>\n"
-                         "<h1>Not Found</h1>\n"
+                         "<h1> 404 Not Found</h1>\n"
                          "The requested URL was not found.\n"
                          "</body>\n</html>");
 
@@ -99,12 +102,11 @@ void *doWork(void *arg)
                          "Content-Length: %ld\n\n%s",
                          strlen(body), body);
             }
-            printf("Writing fd\n");
             n = write(fd, msg, strlen(msg));
             if (n < 0)
                 error("ERROR writing to socket");
+            /* closes socket */
             close(fd);
-            printf("socket closed\n");
         }
     }
 }
@@ -139,7 +141,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in6 serv_addr, cli_addr;
     pthread_t threadID[THREADS];
 
-    /* main thread socket */
+    /* main thread socket, accepts IPv4 and IPv6 */
     sockfd = socket(AF_INET6, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
@@ -154,13 +156,14 @@ int main(int argc, char *argv[])
     }
     listen(sockfd, 5);
 
+    /* Create worker threads */
     printf("creating threads\n");
     for (int i = 0; i < THREADS; i++)
     {
-        pthread_create(&threadID[i], NULL, doWork, bbuffer);
+        pthread_create(&threadID[i], NULL, handle_request, bbuffer);
     }
 
-    // thread
+    /*Main accept loop, adds file descriptors to bbuffer */
     while (1)
     {
         printf("Ready to take requests on port: %d\n", PORT);
@@ -169,7 +172,7 @@ int main(int argc, char *argv[])
         if (newsockfd < 0)
         {
             error("ERROR on accept");
-            exit(EXIT_FAILURE); // Kanskje fjern
+            exit(EXIT_FAILURE);
         }
         bb_add(bbuffer, newsockfd);
     }

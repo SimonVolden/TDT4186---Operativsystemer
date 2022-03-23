@@ -17,21 +17,36 @@ SEM *sem_init(int initVal)
     SEM *sem = (SEM *)malloc(sizeof(struct SEM));
     if (sem == NULL)
     {
-        printf("Failed to allocate sem\n");
-        free(sem);
+        perror("Failed to allocate sem\n");
+        return NULL;
     }
 
     sem->counter = initVal;
-    pthread_mutex_init(&sem->mutex, NULL);
-    pthread_cond_init(&sem->cond, NULL);
-    // TODO: error handling
+    int mutexStatus = pthread_mutex_init(&sem->mutex, NULL);
+    int condStatus = pthread_cond_init(&sem->cond, NULL);
+
+    if (mutexStatus || condStatus)
+    {
+        perror("Failed to initialize mutex\n");
+        sem_del(sem);
+        return NULL;
+    };
 
     return sem;
 }
 
 int sem_del(SEM *sem)
 {
+    int returnValue = 0;
+    int mutexStatus = pthread_mutex_destroy(&sem->mutex);
+    int condStatus = pthread_cond_destroy(&sem->cond);
+    if (mutexStatus || condStatus)
+    {
+        perror("Failed to destroy mutex\n");
+        returnValue = -1;
+    };
     free(sem);
+    return returnValue;
 }
 
 void P(SEM *sem)

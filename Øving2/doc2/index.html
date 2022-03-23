@@ -1,0 +1,173 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="mystyle.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="main.js"></script>
+    <title>insane art</title>
+</head>
+<body>
+    <h1>
+        Art by the master (student) van Boat
+    </h1>
+    <div class="intro">
+        Dette er mine flotte versjoner av Boaty McBoatface, prøv gjerne å hold musepekeren over båtene, og se om du finner en hemmelig beskjed. PS. når du først er igang kan du jo gjerne trykke litt rundt
+    </div>
+
+    <div class="parent">
+        <div class="grid-item">
+            <div class="svg", id="boat">
+                <h2> svg </h2>
+                <svg width="600" height="400" >
+                    <text fill="#ff0000" font-size="20" font-family="Verdana" x="260" y="150">help me!</text>
+                    <path id="svgboat" d="M 50 210 q 150 300 500 0" stroke="brown"
+                        stroke-width="1" fill="brown" />
+                    <rect x="250" y="10" width="10" height="200" class="bilde"
+                        style="fill:black;black:black;stroke-width:5;opacity:1" />
+                    <polygon class ="sail" id="sail" points="260,20 500,180 110,180" style="fill:lightblue;stroke:lightblue;stroke-width:1" />
+                    <polygon points="260,20 200,10 260, 0" style="fill:pink;stroke:pink;stroke-width:1" />
+                    
+                    <text fill="#ffffff" font-size="30" font-family="Verdana" x="100" y="265">Boaty McBoatface II</text>
+                   
+                      <!-- Fill circle with a gradient
+                      https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/fill -->
+                    <defs>
+                        <radialGradient id="myGradient">
+                        <stop offset="0%"   stop-color="yellow" />
+                        <stop offset="100%" stop-color="orange" />
+                        </radialGradient>
+                    </defs>
+                    <circle id="sun" class="sun"cx="500" cy="50" r="50" fill="url(#myGradient)"/>
+                    
+                    <!-- https://stackoverflow.com/questions/44215939/animate-image-on-svg-path -->
+                        <path d="M 0 0 H -314"stroke="black" stroke-width="0" fill="none"
+                            id="animatePath"/>
+                    <!-- Adding a bitmap to svg -->   
+                    <image id="svgwater" xlink:href="https://opengameart.org/sites/default/files/preview_742.png"  y="30" height="500" width="1000">
+                        <animateMotion
+                        xlink:href="#svgwater"
+                        dur="2600ms"
+                        begin="0s"
+                        restart="always" 
+                        repeatCount="indefinite">
+                        <mpath xlink:href="#animatePath"/>
+                        </animateMotion> 
+                    </image>
+                </svg>
+            </div>
+        </div>
+        <div class="grid-item">
+            <div class="canvas">
+                <h2> canvas </h2>
+                <canvas id="myCanvas" width="600" height="400"></canvas>
+                <script src="canvas.js"></script>
+            </div>
+        </div>
+    </div>
+
+    <div class="documentation_btn">
+        <button class="btn" id="btn" >Vis dokumentasjon</button>
+    </div>
+
+
+    <div class="parent-documentation-grid" id="doc-elem" style="display: none"  >
+        <div class="documentation_elements">
+            <div class="doc-header"> Hvordan jeg bruker CSS-grid </div>
+            <p> På denne siden har jeg tatt i bruk CSS-grid på to ulike steder.
+            Jeg har valgt å bruke et grid som har to elementer, det er her bildene ligger.
+            Deretter har jeg valgt å plassere all dokumentasjon i en egen grid
+            lenger nede på siden. Dette står i den første gridboksen. 
+            Jeg implementerte CSS-grid ved å bruke CSS sin "display:grid", 
+            jeg bruker også "flex-wrap" for å wrappe boksene, slik at de bedre
+            tilpasser seg endringer av skjermstørrelsen. 
+            Dessuten har jeg også satt en min/maks størrelse på grid-elementene
+            slik at de ikke vil stå på siden av hverandre ved stående skjerm </p>
+        </div>
+        <div class="documentation_elements">
+            <div class="doc-header">Hvordan jeg har tatt i bruk cross-browser testing.  </div>
+            <p>
+            Jeg brukte cross-browser testing for å sjekke sidens funksjonalitet. 
+            Dette ble gjort ved å åpne filen i både chrome og edge,
+            sjekke at de ulike jQuery funksjonene fungerte, 
+            samt hvordan siden reagerte på endring av skjermstørrelse.
+
+            </p>
+        </div>
+        <div class="documentation_elements">
+            <div class="doc-header">Hvordan jeg har brukt HTML canvas og SVG i HTML </div>
+            <p>
+            Jeg startet med å lage kunsten min i HTML canvas. 
+            Selv ser jeg på det som en liten tabbe da jeg ikke tenkte på animasjon
+            og interaktivitet under arbeidet. 
+            Jeg tok i bruk canvas-apiet og hardkodet kunsten i filen canvas.js. 
+            Denne hentes i html filen etter opprettelsen av canvaset. 
+            Jeg la også til en liten beskjed bak seilet som skulle bli synlig ved 
+            brukerinteraktivitet. Animasjonen av vannet er gjort med en png-fil av vann. 
+            Bildet er litt lengre enn kunsten og dras mot venstre, 
+            etter en liten tid blir offsettet endret tilbake, 
+            slik skapes en følelse av "uendelig loop". 
+            Dette er gjort i javaScript, funksjonen heter animate() og 
+            ligger i canvas.js. For hver forflytning tegnes hele kunsten på nytt.
+            <br><br>
+            Etter at jeg hadde laget kunsten i canvas prøvde jeg med
+            på å lage en tilsvarende versjon i SVG. 
+            Dette gikk veldig greit, da jeg ikke trengte å være like kreativ. 
+            I tillegg krevde det mindre linjer for å hardkode svg-elementene. 
+            Det var derimot litt vanskeligere å forstå hvilke parametere som
+            skulle brukes. Dette var w3Schools behjepelig med.
+            Animasjonen av vannet var derimot litt vanskeligere heretter.
+            Jeg måtte ta i bruk animateMotion, og fikk det ikke til å fungere i starten,
+            etter noen søk på google fant jeg likevel et eksempel jeg kunne ta utgangspunkt i.
+            Solen fader inn og ut ved hjelp av css sin keyframe funksjonalitet.
+            </p>
+        </div>
+        <div class="documentation_elements">
+            <div class="doc-header">Hvordan jeg har brukt jQuery </div>
+            <p>
+            Jeg har brukt jQuery-apiet for å legge til funksjonalitet som vise/gjemme dokumentasjon,
+            samt interaktivitet på kunsten. På selve knappen, som har en spesiell id som
+            jeg har gitt den, har jeg tatt i bruk ".toggle".
+            Denne har videre en if/else statement som sjekker om dokumentasjonen er synlig.
+            Videre blir knappens tekst og funksjon endret heretter. 
+            <br> <br>
+            For å få til brukerinteraksjon har jeg på de ulike kunstene brukt ulike teknikker. 
+            På svg kunsten tar jeg i bruk ".hover" funksjonen til å oppdage interaksjon, 
+            videre tar jeg i bruk ".css" funksjonen til å endre elementenes farger og opacity.
+            Jeg har lagt til funksjon slik at den går tilbake når elementet ikke har 
+            musepekeren på seg. Jeg laget en liten liste av enkle farger, 
+            fargene blir valgt ut tilfeldig, og gitt til båten.
+            Jeg valgte også her å endre båtens farge til en annen farge enn orginalen
+            <br> <br>
+            Jeg brukte samme ".hover" teknikk på canvas kunsten. Forskjellen her er at jQuery 
+            kaller javaScript funksjonen "changeSailOpacity(verdi)" som tar inn en 
+            verdi på seilets opacity. Denne funksjonen endrer en global variabel i canvas.js, 
+            samt tegner bildet på nytt. Samme prinsipp brukes for å endre båtens farge.
+            Når seilet her er gjennomsiktig er det mulig å lese hva som står bak det.
+            </p>
+        </div>
+        <div class="documentation_elements">
+            <div class="doc-header">Mine mest nyttige informasjonskilder </div>
+            <br>
+                <div class="p-doc">
+                Jeg har brukt endel tid på å finne passende funksjonalitet 
+                både for CSS, jQuery og javaScript. Disse sidene var mest behjelpelige:
+                <ul>
+                    <li><a href="url">w3Schools.com</a></li>
+                    <li><a href="url">stackoverflow.com</a></li>
+                    <li><a href="url">https://www.youtube.com/watch?v=JjIvF0yikGU&ab_channel=blondiebytes</a></li>
+                </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+        
+
+  
+
+
+</body>
+</html>
+

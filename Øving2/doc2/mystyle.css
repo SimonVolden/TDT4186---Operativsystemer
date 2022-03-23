@@ -1,0 +1,133 @@
+body {
+  /*background-color: rgb(70, 157, 228);*/
+  margin-left: auto;
+  margin-right: auto;
+  margin-right: 5%;
+  margin-left: 5%;
+}
+
+h1 {
+  color: rgb(0, 0, 0);
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.doc-header {
+  font-size: large;
+  color: rgb(0, 0, 0);
+  text-align: center;
+  font-family: sans-serif;
+}
+
+p {
+  text-align: left;
+  color: rgb(0, 0, 0);
+  font-size: medium;
+  font-family: Helvetica, Arial, sans-serif;
+  flex-wrap: wrap;
+  border: 6px solid rgb(175, 173, 149);
+  padding: 1%;
+  border-radius: 12px;
+}
+
+.p-doc {
+  /*Brukes når paragrafen har en liste*/
+  text-align: left;
+  color: rgb(0, 0, 0);
+  font-size: medium;
+  font-family: Helvetica, Arial, sans-serif;
+  flex-wrap: wrap;
+  border: 6px solid rgb(175, 173, 149);
+  padding: 1%;
+  border-radius: 12px;
+}
+.intro {
+  text-align: center;
+  color: rgb(0, 0, 0);
+  font-size: medium;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.parent {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
+  grid-column-gap: 50px;
+  grid-row-gap: 3%;
+  padding-bottom: 50px;
+  padding-top: 3%;
+}
+
+.parent-documentation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+  grid-column-gap: 50px;
+  grid-row-gap: 10px;
+  padding-top: 2%;
+  padding-bottom: 2%;
+  flex-wrap: wrap;
+}
+
+.grid-item {
+  border: 1px solid rgba(0, 0, 0, 0);
+}
+
+.svg {
+  text-align: center;
+  font-family: sans-serif;
+  width: auto;
+  height: 468px;
+  border: 6px solid rgb(204, 204, 204);
+  background: coral;
+  margin: auto;
+}
+
+.canvas {
+  text-align: center;
+  font-family: sans-serif;
+  background-color: yellowgreen;
+  height: 468px;
+  border: 6px solid #ccc;
+  margin: auto;
+}
+
+.documentation_btn {
+  text-align: center;
+}
+
+.documentation_elements {
+  text-align: left;
+}
+
+.btn {
+  border-radius: 12px;
+  background-color: #e7e7e7;
+  color: black;
+  font-family: sans-serif;
+}
+
+g {
+  transform: scale();
+}
+
+a:link {
+  color: black;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.sun {
+  -webkit-animation: fadeinout 4s infinite;
+  animation: fadeinout 4s infinite;
+  opacity: 0;
+}
+/*https://stackoverflow.com/questions/30125705/css-how-to-make-an-element-fade-in-and-then-fade-out*/
+@-webkit-keyframes fadeinout {
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeinout {
+  50% {
+    opacity: 1;
+  }
+}
