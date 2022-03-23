@@ -73,7 +73,6 @@ int bb_get(BNDBUF *bb);
  *
  * the int element
  */
-
 void bb_add(BNDBUF *bb, int fd);
 
 #endif

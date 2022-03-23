@@ -14,35 +14,20 @@ typedef struct SEM
 
 SEM *sem_init(int initVal)
 {
-    SEM *sem = (SEM*) malloc(sizeof(struct SEM));
+    SEM *sem = (SEM *)malloc(sizeof(struct SEM));
+    if (sem == NULL)
+    {
+        printf("Failed to allocate sem\n");
+        free(sem);
+    }
 
     sem->counter = initVal;
     pthread_mutex_init(&sem->mutex, NULL);
     pthread_cond_init(&sem->cond, NULL);
-    //TODO: error handling
+    // TODO: error handling
 
     return sem;
 }
-/*
-void P(SEM *sem)
-{
-    if ((errno = pthread_cond_wait(&sem->cond, &sem->mutex)) != 0)
-    {
-        return;
-    }
-    while (sem->counter <= 0)
-    {
-        if ((errno = pthread_cond_wait(&sem->cond, &sem->mutex)) != 0)
-        {
-            pthread_mutex_unlock(&sem->mutex);
-            return;
-        }
-        sem->counter--;
-        if (errno = pthread_mutex_ulock(&sem->mutex) != 0)
-            return;
-    }
-}
-*/
 
 int sem_del(SEM *sem)
 {
@@ -51,19 +36,13 @@ int sem_del(SEM *sem)
 
 void P(SEM *sem)
 {
-    printf("locking value\n");
     pthread_mutex_lock(&sem->mutex);
-    printf("locked value %d\n", sem->counter);
     if (sem->counter < 1)
     {
         pthread_cond_wait(&sem->cond, &sem->mutex);
-        printf("got signaled\n");
     }
-    // Wake up a thread that's waiting, if any.
-    // if (sem->counter > 0)
     sem->counter--;
     pthread_mutex_unlock(&sem->mutex);
-    printf("unlocked value\n");
 }
 
 void V(SEM *sem)
@@ -71,22 +50,6 @@ void V(SEM *sem)
     pthread_mutex_lock(&sem->mutex);
     sem->counter++;
     pthread_mutex_unlock(&sem->mutex);
-    
+
     pthread_cond_signal(&sem->cond);
 }
-/*
-void V(SEM *sem)
-{
-    if ((errno = pthread_mutex_lock(&sem->mutex)) != 0)
-    {
-        return;
-    }
-    sem->counter++;
-
-    if ((errno = pthread_cond_broadcast(&sem->cond)) != 0)
-        return;
-    if ((errno = pthread_mutex_unlock(&sem->mutex) != 0))
-        return;
-}
-
-*/

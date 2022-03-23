@@ -18,24 +18,24 @@ void error(const char *msg)
     exit(1);
 }
 
-char path[256];
 char root[256];
-FILE *fp;
-char *fbuffer = NULL;
 
 void *doWork(void *arg)
 {
-    // sleep(30);
+    char path[256];
+    char *fbuffer = NULL;
+    FILE *fp;
+
     while (1)
     {
+        /* get file descriptor from bbuffer */
         int fd;
-        printf("Getting from bbuffer \n");
-        printf("Trhead %li\n", (long) pthread_self());
+        printf("[Worker Thread %li]\n", (long)pthread_self());
         fd = bb_get((BNDBUF *)arg);
-        printf("got fd: %d \n", fd);
         if (fd)
         {
 
+            /* clears request buffer */
             memset(buffer, 0, sizeof(buffer));
             int n = read(fd, buffer, sizeof(buffer) - 1);
             if (n < 0)
@@ -51,7 +51,7 @@ void *doWork(void *arg)
             printf("Request path: %s\n", token);
             strcpy(path, root);
 
-            // check if default route
+            /* check if default route */
             if (token[1] == 0)
                 strcpy(token, "/index.html");
 
@@ -74,7 +74,7 @@ void *doWork(void *arg)
                 }
                 fclose(fp);
             }
-            // sends page if found
+            /* sends page if found */
             if (fbuffer != NULL)
             {
                 strcpy(body, fbuffer);
@@ -112,29 +112,25 @@ void *doWork(void *arg)
 int main(int argc, char *argv[])
 {
 
-    strcpy(root, argv[2]); // dette er root som skal settes fra args
+    /* Root from args */
+    strcpy(root, argv[2]);
     printf("Root: %s\n", root);
 
-    char path[100];
-
-    // Port from args
+    /* Port from args */
     char *a = argv[1];
     int PORT = atoi(a);
 
-    // threads from args
+    /* Threads from args */
     char *b = argv[3];
     int THREADS = atoi(b);
 
-    // bbuffer slots from args
+    /* Bbuffer slots from args */
     char *c = argv[4];
     int BNDBUFSIZE = atoi(c);
-
     struct BNDBUF *bbuffer = bb_init(BNDBUFSIZE);
 
     printf("Port: %d\n", PORT);
-
     printf("Threads: %d\n", THREADS);
-
     printf("Buffer size: %d\n", BNDBUFSIZE);
 
     int sockfd, newsockfd;
@@ -143,12 +139,12 @@ int main(int argc, char *argv[])
     struct sockaddr_in6 serv_addr, cli_addr;
     pthread_t threadID[THREADS];
 
+    /* main thread socket */
     sockfd = socket(AF_INET6, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
     memset((char *)&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin6_family = AF_INET6;
-    // AF_ITEN6 == IPv6
     serv_addr.sin6_addr = in6addr_any;
     serv_addr.sin6_port = htons(PORT);
     if (bind(sockfd, (struct sockaddr *)&serv_addr,
@@ -161,12 +157,7 @@ int main(int argc, char *argv[])
     printf("creating threads\n");
     for (int i = 0; i < THREADS; i++)
     {
-        //
-        // pthread_t* _thread;
-        // threadID[i] = _thread;
-        printf("Creating thread %d \n", i);
         pthread_create(&threadID[i], NULL, doWork, bbuffer);
-        printf("Finished creating thread %d \n", i);
     }
 
     // thread
@@ -180,19 +171,6 @@ int main(int argc, char *argv[])
             error("ERROR on accept");
             exit(EXIT_FAILURE); // Kanskje fjern
         }
-        printf("Adding socketfd to bbuffer %d\n", newsockfd);
         bb_add(bbuffer, newsockfd);
-        printf("Added socketfd to bbuffer \n");
-
-        // legg til newsockfd i buffer
-        // kjør loop på nytt
     }
 }
-
-/**
- * hver Threads må være en while, Disse lages før while i main
- * Antallet threads skal være satt.
- * De må ha en funksjon som hele tiden kaller bb get.
- * Den blir blokkert dersom bb er tom
- *
- */
