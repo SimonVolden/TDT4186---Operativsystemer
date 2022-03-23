@@ -111,6 +111,17 @@ void *handle_request(void *arg)
     }
 }
 
+/* Main method for running the web server.
+ *
+ * Multi-threaded web server that takes in requests on the given port,
+ * and delegates those requests to the worker threads through a ring buffer.
+ *
+ * Parameters:
+ * www-path     the root path for the web server
+ * port         the port the server runs on
+ * #threads     the number of worker threads to handle requests
+ * #bufferslots the number of slots in the buffer
+ */
 int main(int argc, char *argv[])
 {
 
