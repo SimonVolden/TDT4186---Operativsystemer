@@ -23,14 +23,15 @@ char root[256];
 FILE *fp;
 char *fbuffer = NULL;
 
-void doWork(BNDBUF *bbuffer)
+void *doWork(void *arg)
 {
     // sleep(30);
     while (1)
     {
         int fd;
         printf("Getting from bbuffer \n");
-        fd = bb_get(bbuffer);
+        printf("Trhead %li\n", (long) pthread_self());
+        fd = bb_get((BNDBUF *)arg);
         printf("got fd: %d \n", fd);
         if (fd)
         {
@@ -139,17 +140,17 @@ int main(int argc, char *argv[])
     int sockfd, newsockfd;
     socklen_t clilen;
     struct addrinfo *serverinfo;
-    struct sockaddr_in serv_addr, cli_addr;
+    struct sockaddr_in6 serv_addr, cli_addr;
     pthread_t threadID[THREADS];
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET6, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
     memset((char *)&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
+    serv_addr.sin6_family = AF_INET6;
     // AF_ITEN6 == IPv6
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin6_addr = in6addr_any;
+    serv_addr.sin6_port = htons(PORT);
     if (bind(sockfd, (struct sockaddr *)&serv_addr,
              sizeof(serv_addr)) < 0)
     {
@@ -164,7 +165,7 @@ int main(int argc, char *argv[])
         // pthread_t* _thread;
         // threadID[i] = _thread;
         printf("Creating thread %d \n", i);
-        pthread_create(&threadID[i], NULL, &doWork, bbuffer);
+        pthread_create(&threadID[i], NULL, doWork, bbuffer);
         printf("Finished creating thread %d \n", i);
     }
 
@@ -173,8 +174,7 @@ int main(int argc, char *argv[])
     {
         printf("Ready to take requests on port: %d\n", PORT);
         clilen = sizeof(cli_addr);
-        newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr,
-                           &clilen);
+        newsockfd = accept(sockfd, NULL, NULL);
         if (newsockfd < 0)
         {
             error("ERROR on accept");
