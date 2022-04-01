@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 
 #define MAX_LIMIT 200
 
@@ -38,7 +39,7 @@ void parseString(char *str, char **parsedArgs)
     }
 }
 
-void execute(char **parsedArgs)
+void execute(char **parsedArgs, char cwd[])
 {
     if (strcmp(parsedArgs[0], "cd") == 0)
     {
@@ -49,17 +50,52 @@ void execute(char **parsedArgs)
 
     int status;
     pid_t pid = fork();
+
+    if (pid == -1)
+    {
+        perror("fork failed");
+    }
+
     if (pid == 0)
     {
         // child
         execvp(parsedArgs[0], parsedArgs);
+        exit(EXIT_FAILURE);
     }
     else
     {
+
         // parent
         waitpid(pid, &status, 0);
         // add status
+
+        if (WIFEXITED(status))
+        {
+            int es = WEXITSTATUS(status);
+
+            char inputString[1024] = "";
+
+            for (int i = 0; i < MAX_LIMIT; i++)
+            {
+                if (!parsedArgs[i])
+                {
+                    break;
+                }
+                if (i != 0)
+                {
+                    strcat(inputString, " ");
+                }
+                strcat(inputString, parsedArgs[i]);
+            }
+
+            printf("Exit status [%s] = %d\n", inputString, es);
+        }
     }
+    /*
+    /home/user/shelldev: /bin/echo test
+    test
+    Exit status [/bin/echo test] = 0
+    */
 }
 
 int main(void)
@@ -89,9 +125,9 @@ int main(void)
         {
             if (!parsedArgs[i])
                 break;
-            printf("arg %d: %s\n", i, parsedArgs[i]);
+            // printf("arg %d: %s\n", i, parsedArgs[i]);
         }
-        execute(parsedArgs);
+        execute(parsedArgs, cwd);
     }
 }
 

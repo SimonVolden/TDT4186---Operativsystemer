@@ -2,6 +2,7 @@
     "files.associations": {
         "*.xml": "html",
         "stdio.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "unistd.h": "c"
     }
 }
