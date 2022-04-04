@@ -11,6 +11,14 @@
 
 #define MAX_LIMIT 200
 
+struct pid_list
+{
+    int pid;
+    char cmd_line[MAX_LIMIT];
+    struct pid_list *last;
+    struct pid_list *next;
+};
+
 /**
  * @brief clears io stream
  *
@@ -39,13 +47,72 @@ void parseString(char *str, char **parsedArgs)
     }
 }
 
-void execute(char **parsedArgs, char cwd[])
+void check_status(int status, char input[MAX_LIMIT])
 {
+    /* removes newline from input string */
+    input[strcspn(input, "\n")] = 0;
+
+    if (WIFEXITED(status))
+    {
+        int es = WEXITSTATUS(status);
+        printf("Exit status [%s] = %d\n", input, es);
+    }
+}
+
+int check_if_background_task(char input[MAX_LIMIT])
+{
+    /* removes newline from input string */
+    input[strcspn(input, "\n")] = 0;
+    int length = strlen(input) - 1;
+
+    /* checks for '&' and removes it from string */
+    int check = input[length] == '&';
+    if ((length > 0) && (input[length] == '&'))
+    {
+        input[length] = '\0';
+        length--;
+    }
+
+    /* removes trailing whitespaces after removing '&' */
+    while (length > -1)
+    {
+        if (input[length] == ' ' || input[length] == '\t')
+            length--;
+        else
+            break;
+        input[length + 1] = '\0';
+    }
+
+    return check;
+}
+
+void execute(char **parsedArgs, char cwd[], char input[MAX_LIMIT])
+{
+    int background = check_if_background_task(input);
+    int has_redirect = 0;
     if (strcmp(parsedArgs[0], "cd") == 0)
     {
         if (parsedArgs[1])
             chdir(parsedArgs[1]);
         return;
+    }
+
+    for (int i = 0; i < MAX_LIMIT; i++)
+    {
+        if (!parsedArgs[i])
+            break;
+
+        printf("%s\n", parsedArgs[i]);
+        if (strcmp(parsedArgs[i], "> "))
+        {
+            has_redirect = 1;
+            break;
+        }
+        if (strcmp(parsedArgs[i], "< "))
+        {
+            has_redirect = 1;
+            break;
+        }
     }
 
     int status;
@@ -59,37 +126,28 @@ void execute(char **parsedArgs, char cwd[])
     if (pid == 0)
     {
         // child
-        execvp(parsedArgs[0], parsedArgs);
+        if (has_redirect == 1)
+        {
+            execl("/bin/sh", "/bin/sh", "-c", input, 0);
+        }
+        else
+        {
+            execvp(parsedArgs[0], parsedArgs);
+        }
         exit(EXIT_FAILURE);
     }
     else
     {
-
         // parent
-        waitpid(pid, &status, 0);
-        // add status
-
-        if (WIFEXITED(status))
+        /* TODO: Check if background task, add to list */
+        if (background)
         {
-            int es = WEXITSTATUS(status);
-
-            char inputString[1024] = "";
-
-            for (int i = 0; i < MAX_LIMIT; i++)
-            {
-                if (!parsedArgs[i])
-                {
-                    break;
-                }
-                if (i != 0)
-                {
-                    strcat(inputString, " ");
-                }
-                strcat(inputString, parsedArgs[i]);
-            }
-
-            printf("Exit status [%s] = %d\n", inputString, es);
+            printf("ENDS WITH &\n");
         }
+        // else
+        // printf("Does not end with &\n");
+        waitpid(pid, &status, 0);
+        check_status(status, input);
     }
     /*
     /home/user/shelldev: /bin/echo test
@@ -102,6 +160,7 @@ int main(void)
 {
     char cwd[MAX_LIMIT];
     char input[MAX_LIMIT];
+    char inputString[MAX_LIMIT];
     char *parsedArgs[MAX_LIMIT];
     while (1)
     {
@@ -118,6 +177,7 @@ int main(void)
             printf("Got EOF signal\n");
             break;
         }
+        strcpy(inputString, input); // Make a copy of input string
 
         parseString(input, parsedArgs);
 
@@ -125,9 +185,8 @@ int main(void)
         {
             if (!parsedArgs[i])
                 break;
-            // printf("arg %d: %s\n", i, parsedArgs[i]);
         }
-        execute(parsedArgs, cwd);
+        execute(parsedArgs, cwd, inputString);
     }
 }
 
