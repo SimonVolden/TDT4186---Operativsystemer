@@ -1,4 +1,14 @@
-
+/**
+ * @file alarm_clock.c
+ * @author Simonevo
+ * @author Siguhau
+ * @author Andrhae
+ * @brief Practical 3
+ * @date 2022-04-05
+ *
+ * A unix-based shell implemented in C.
+ *
+ */
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,28 +21,142 @@
 
 #define MAX_LIMIT 200
 
-struct pid_list
+/**
+ * @brief Linked list where the background tasks is stored
+ */
+struct node
 {
     int pid;
     char cmd_line[MAX_LIMIT];
-    struct pid_list *last;
-    struct pid_list *next;
+    struct node *previous;
+    struct node *next;
 };
 
+/* Global variables for accessing the linked list of background tasks */
+struct node *head = NULL;
+struct node *tail = NULL;
+
 /**
- * @brief clears io stream
- *
- * @return void
+ * @brief Checks the status of the exited task and prints it.
+ * @param status int from waitpid
+ * @param input the task that has been executed.
  */
-int clear(void)
+void check_status(int status, char *input)
 {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF)
+    /* removes newline from input string */
+    input[strcspn(input, "\n")] = 0;
+
+    if (WIFEXITED(status))
     {
+        int es = WEXITSTATUS(status);
+        printf("Exit status [%s] = %d\n", input, es);
     }
-    return 0;
 }
 
+/**
+ * @brief Adds a node to the linked list
+ *
+ * @param pid the pid of the process node
+ * @param cmd_line the command line of the process node
+ */
+void add_node(int pid, char *cmd_line)
+{
+    struct node *new_node = (struct node *)malloc(sizeof(struct node));
+
+    /* update values */
+    new_node->pid = pid;
+    strcpy(new_node->cmd_line, cmd_line);
+
+    /* update previous pointer */
+    new_node->previous = tail;
+    if (tail != NULL)
+        tail->next = new_node;
+    tail = new_node;
+
+    /* update next pointer */
+    new_node->next = NULL;
+    if (head == NULL)
+    {
+        head = new_node;
+    }
+}
+
+/**
+ * @brief Prints all nodes in the linked list,
+ * is called by the prompt "jobs"
+ */
+void print_nodes()
+{
+    struct node *ptr = head;
+    while (ptr != NULL)
+    {
+        printf("[pid %d] %s\n", ptr->pid, ptr->cmd_line);
+        ptr = ptr->next;
+    }
+}
+
+/**
+ *@brief Removes given node from linked list and rebinds the
+ * previous and next node together.
+ * If next or previous is NULL, head/tail is updated.
+ * Frees the node
+ */
+
+void remove_node(struct node *remove)
+{
+    /* checks if first node */
+    if (remove->previous != NULL)
+    {
+        remove->previous->next = remove->next;
+    }
+    else
+    {
+        head = remove->next;
+    }
+
+    /* checks if last node */
+    if (remove->next != NULL)
+    {
+        remove->next->previous = remove->previous;
+    }
+    else
+    {
+        tail = remove->previous;
+    }
+    free(remove);
+}
+
+/**
+ * @brief check if processes in list are complete.
+ *
+ * Goes through all the background processes in the linked list,
+ * and checks if the process has terminated.
+ * If it terminated, print it's exit status and remove the node.
+ */
+void check_nodes()
+{
+    struct node *ptr = head;
+    while (ptr != NULL)
+    {
+        int status;
+
+        /* checks if processes are complete */
+        if (waitpid(ptr->pid, &status, WNOHANG))
+        {
+            check_status(status, ptr->cmd_line);
+
+            remove_node(ptr);
+        }
+        ptr = ptr->next;
+    }
+}
+
+/**
+ * @brief Parses the given input and adds them to parsedArgs
+ *
+ * @param str input to parse
+ * @param parsedArgs pointer to list of parsed arguments
+ */
 void parseString(char *str, char **parsedArgs)
 {
     char delim[4] = "\t \n";
@@ -47,18 +171,10 @@ void parseString(char *str, char **parsedArgs)
     }
 }
 
-void check_status(int status, char input[MAX_LIMIT])
-{
-    /* removes newline from input string */
-    input[strcspn(input, "\n")] = 0;
-
-    if (WIFEXITED(status))
-    {
-        int es = WEXITSTATUS(status);
-        printf("Exit status [%s] = %d\n", input, es);
-    }
-}
-
+/**
+ * @brief Checks if the given input should be executed as a background task
+ * @param input string input from the user.
+ */
 int check_if_background_task(char input[MAX_LIMIT])
 {
     /* removes newline from input string */
@@ -86,17 +202,31 @@ int check_if_background_task(char input[MAX_LIMIT])
     return check;
 }
 
-void execute(char **parsedArgs, char cwd[], char input[MAX_LIMIT])
+/**
+ * @brief Executes the command from user
+ * @param parsedArgs list of every argument from the user input.
+ * @param cwd current working directory.
+ * @param input the command given from user.
+ */
+void execute(char **parsedArgs, char *input)
 {
     int background = check_if_background_task(input);
     int has_redirect = 0;
+
+    /* internal commands */
     if (strcmp(parsedArgs[0], "cd") == 0)
     {
         if (parsedArgs[1])
             chdir(parsedArgs[1]);
         return;
     }
+    if (strcmp(parsedArgs[0], "jobs") == 0)
+    {
+        print_nodes();
+        return;
+    }
 
+    /* I/O redirection */
     for (int i = 0; i < MAX_LIMIT; i++)
     {
         if (!parsedArgs[i])
@@ -125,10 +255,10 @@ void execute(char **parsedArgs, char cwd[], char input[MAX_LIMIT])
 
     if (pid == 0)
     {
-        // child
+        /* child process */
         if (has_redirect == 1)
         {
-            execl("/bin/sh", "/bin/sh", "-c", input, 0);
+            execl("/bin/sh", "/bin/sh", "-c", input, (char *)0);
         }
         else
         {
@@ -138,35 +268,41 @@ void execute(char **parsedArgs, char cwd[], char input[MAX_LIMIT])
     }
     else
     {
-        // parent
-        /* TODO: Check if background task, add to list */
+        /* parent process */
         if (background)
         {
-            printf("ENDS WITH &\n");
+            add_node(pid, input);
         }
-        // else
-        // printf("Does not end with &\n");
-        waitpid(pid, &status, 0);
-        check_status(status, input);
+        else
+        {
+            waitpid(pid, &status, 0);
+            check_status(status, input);
+        }
     }
-    /*
-    /home/user/shelldev: /bin/echo test
-    test
-    Exit status [/bin/echo test] = 0
-    */
 }
 
+/**
+ * @brief runs the shell in a loop. Gets the input from user and
+ * calls the execute function. If background task is finished,
+ * it is shown before the next prompt is given.
+ */
 int main(void)
 {
     char cwd[MAX_LIMIT];
     char input[MAX_LIMIT];
     char inputString[MAX_LIMIT];
     char *parsedArgs[MAX_LIMIT];
+
     while (1)
     {
+        /* checks background processes */
+        check_nodes();
+
+        /* gets current working directory and asks for input */
         if (getcwd(cwd, sizeof(cwd)) != NULL)
         {
-            printf("%s: ", cwd);
+            printf("\033[1;31m%s: \033[0m", cwd);
+            // printf("%s: ", cwd);
         }
         else
         {
@@ -177,91 +313,18 @@ int main(void)
             printf("Got EOF signal\n");
             break;
         }
+
         strcpy(inputString, input); // Make a copy of input string
 
+        /* parses input into arguments */
         parseString(input, parsedArgs);
-
         for (int i = 0; i < MAX_LIMIT; i++)
         {
             if (!parsedArgs[i])
                 break;
         }
-        execute(parsedArgs, cwd, inputString);
+
+        /* executes the command */
+        execute(parsedArgs, inputString);
     }
 }
-
-/* if (getcwd(cwd, sizeof(cwd)) != NULL)
-{
-    printf("%s: ", cwd);
-}
-else
-{
-    perror("getcwd() error");
-}
-scanf("%s", input);
-
-char *token = strtok_r(input, " ", &input);
-
-printf("got input: %s\n", token);
-token = strtok_r(NULL, " ", &input);
-printf("got input: %s\n", token);
-// clear(); */
-
-// printf("input: %s", input);
-
-/* char str[] = "test1 test2";
-
-int i = 0;
-char *token = strtok(str, ' /');
-// char *array[3];
-
-while (token != NULL)
-{
-    // array[i++] = token;
-    token = strtok(NULL, ' /');
-    printf("%s\n", token);
-
-    // printf("%s\n", token);
-} */
-
-/*         for (i = 0; i < 2; ++i)
-        {
-            printf("%s\n", array[i]);
-        } */
-
-// fgets(input, sizeof(input), stdin);
-/*
-input[strcspn(input, "\n")] = 0;
-
-// char str[] = "strtok needs to be called several times to split a string/alwdjmalw";
-
-char input_cpy[MAX_LIMIT];
-strcpy(input_cpy, input);
-
-int init_size = strlen(input);
-char delim[4] = "\t \n"; // NO TOUCHY!!!
-char argument[MAX_LIMIT] = "";
-char *ptr = strtok(input, delim);
-strcpy(argument, ptr);
-int counter = 0;
-int next_delim = 0;
-
-while (ptr != NULL)
-{
-    strcpy(arguments[counter], argument);
-    printf("'%s'\n", ptr);
-    ptr = strtok(NULL, delim);
-    counter++;
-}
-
-for (int i = 0; i < counter; i++)
-{
-    next_delim = next_delim + strlen(arguments[i]);
-
-    printf("Counter: %d, Argument: %s, index of delim: %d \n", i, arguments[i], next_delim);
-}
-
-printf("PATH: %s \n", arguments[0]);
-printf("Arguments: %d \n", counter);
-return 0;
-*/
